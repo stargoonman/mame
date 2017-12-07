@@ -86,7 +86,7 @@ static void cfunc_update_timer_prescale(void *param)
 	((hyperstone_device *)param)->update_timer_prescale();
 }
 
-#if 0
+#if 1
 static void cfunc_print(void *param)
 {
 	((hyperstone_device *)param)->ccfunc_print();
@@ -178,13 +178,13 @@ void hyperstone_device::code_flush_cache()
 /* Return the entry point for a determinated trap */
 void hyperstone_device::generate_get_trap_addr(drcuml_block *block, uml::code_label &label, uint32_t trapno)
 {
-	int no_mem3;
+	int no_subtract;
 	UML_MOV(block, I0, trapno);
 	UML_CMP(block, mem(&m_trap_entry), 0xffffff00);
-	UML_JMPc(block, uml::COND_NE, no_mem3 = label++);
+	UML_JMPc(block, uml::COND_E, no_subtract = label++);
 	UML_SUB(block, I0, 63, I0);
 
-	UML_LABEL(block, no_mem3);
+	UML_LABEL(block, no_subtract);
 	UML_SHL(block, I0, I0, 2);
 	UML_OR(block, I0, I0, mem(&m_trap_entry));
 }
@@ -199,14 +199,13 @@ void hyperstone_device::code_compile_block(offs_t pc)
 	drcuml_state *drcuml = m_drcuml.get();
 	compiler_state compiler = { 0 };
 	const opcode_desc *seqhead, *seqlast;
-	const opcode_desc *desclist;
-	int override = false;
+	bool override = false;
 	drcuml_block *block;
 
 	g_profiler.start(PROFILER_DRC_COMPILE);
 
 	/* get a description of this sequence */
-	desclist = m_drcfe->describe_code(pc);
+	const opcode_desc *desclist = m_drcfe->describe_code(pc);
 
 	bool succeeded = false;
 	while (!succeeded)
@@ -424,6 +423,11 @@ void hyperstone_device::static_generate_nocode_handler()
 	alloc_handle(drcuml, &m_nocode, "nocode");
 	UML_HANDLE(block, *m_nocode);
 	UML_GETEXP(block, I0);
+
+	UML_MOV(block, mem(&m_drc_arg0), (uint32_t)'?');
+	UML_MOV(block, mem(&m_drc_arg1), I0);
+	UML_CALLC(block, cfunc_print, this);
+
 	UML_MOV(block, mem(&PC), I0);
 	//save_fast_iregs(block);
 	UML_EXIT(block, EXECUTE_MISSING_CODE);
@@ -634,12 +638,19 @@ void hyperstone_device::generate_delay_slot_and_branch(drcuml_block *block, comp
 	{
 		generate_update_cycles(block, &compiler_temp, desc->targetpc);
 		if (desc->flags & OPFLAG_INTRABLOCK_BRANCH)
+		{
+			printf("1\n");
 			UML_JMP(block, desc->targetpc | 0x80000000);
+		}
 		else
+		{
+			printf("2: %08x\n", desc->targetpc);
 			UML_HASHJMP(block, 0, desc->targetpc, *m_nocode);
+		}
 	}
 	else
 	{
+		printf("3\n");
 		generate_update_cycles(block, &compiler_temp, mem(&m_branch_dest));
 		UML_HASHJMP(block, 0, mem(&m_branch_dest), *m_nocode);
 	}

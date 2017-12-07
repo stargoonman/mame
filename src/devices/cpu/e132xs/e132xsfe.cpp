@@ -703,7 +703,7 @@ bool e132xs_frontend::describe(opcode_desc &desc, const opcode_desc *prev)
 			if (op & 0x04) desc.flags |= OPFLAG_CAN_CAUSE_EXCEPTION; // addsi
 			if (gdst_code == PC_REGISTER)
 			{
-				desc.targetpc = BRANCH_TARGET_DYNAMIC;
+				desc.targetpc = desc.pc + desc.length + read_limm(desc, op);
 				desc.flags |= OPFLAG_IS_UNCONDITIONAL_BRANCH | OPFLAG_END_SEQUENCE;
 			}
 			break;
