@@ -261,10 +261,6 @@ void hyperstone_device::generate_trap(drcuml_block *block, compiler_state *compi
 	UML_AND(block, DRC_SR, DRC_SR, ~(M_MASK | T_MASK));
 	UML_OR(block, DRC_SR, DRC_SR, (L_MASK | S_MASK));
 
-	UML_MOV(block, mem(&m_drc_arg0), (uint32_t)'A');
-	UML_MOV(block, mem(&m_drc_arg1), I0);
-	UML_CALLC(block, cfunc_print, this);
-
 	UML_MOV(block, DRC_PC, I0);
 	generate_delay_slot_and_branch(block, compiler, desc);
 }

@@ -50,7 +50,7 @@
 
 #define SINGLE_INSTRUCTION_MODE         (1)
 
-#define ENABLE_E132XS_DRC				(0)
+#define ENABLE_E132XS_DRC				(1)
 
 //**************************************************************************
 //  TYPE DEFINITIONS
@@ -441,7 +441,7 @@ private:
 
 	void generate_set_global_register(drcuml_block *block, compiler_state *compiler, const opcode_desc *desc);
 
-	void generate_trap(drcuml_block *block, compiler_state *compiler, const opcode_desc *desc, uint32_t addr);
+	void generate_trap(drcuml_block *block, compiler_state *compiler, const opcode_desc *desc);
 	void generate_int(drcuml_block *block, compiler_state *compiler, const opcode_desc *desc, uint32_t addr);
 	void generate_exception(drcuml_block *block, compiler_state *compiler, const opcode_desc *desc, uint32_t addr);
 	void generate_software(drcuml_block *block, compiler_state *compiler, const opcode_desc *desc);

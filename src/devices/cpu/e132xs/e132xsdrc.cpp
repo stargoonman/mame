@@ -86,7 +86,7 @@ static void cfunc_update_timer_prescale(void *param)
 	((hyperstone_device *)param)->update_timer_prescale();
 }
 
-#if 1
+#if 0
 static void cfunc_print(void *param)
 {
 	((hyperstone_device *)param)->ccfunc_print();
@@ -424,10 +424,6 @@ void hyperstone_device::static_generate_nocode_handler()
 	UML_HANDLE(block, *m_nocode);
 	UML_GETEXP(block, I0);
 
-	UML_MOV(block, mem(&m_drc_arg0), (uint32_t)'?');
-	UML_MOV(block, mem(&m_drc_arg1), I0);
-	UML_CALLC(block, cfunc_print, this);
-
 	UML_MOV(block, mem(&PC), I0);
 	//save_fast_iregs(block);
 	UML_EXIT(block, EXECUTE_MISSING_CODE);
@@ -550,14 +546,16 @@ void hyperstone_device::generate_checksum_block(drcuml_block *block, compiler_st
 		if (!(seqhead->flags & OPFLAG_VIRTUAL_NOOP))
 		{
 			uint32_t sum = seqhead->opptr.w[0];
-			void *base = m_direct->read_ptr(seqhead->physpc);
-			UML_LOAD(block, I0, base, 0, SIZE_WORD, SCALE_x2);
+			uint32_t addr = seqhead->physpc;
+			void *base = m_direct->read_ptr(addr);
+			UML_LOAD(block, I0, base, (addr & 2) ^ 2, SIZE_WORD, SCALE_x1);
 
 			if (seqhead->delay.first() != nullptr && seqhead->physpc != seqhead->delay.first()->physpc)
 			{
-				base = m_direct->read_ptr(seqhead->delay.first()->physpc);
+				addr = seqhead->delay.first()->physpc;
+				base = m_direct->read_ptr(addr);
 				assert(base != nullptr);
-				UML_LOAD(block, I1, base, 0, SIZE_WORD, SCALE_x2);
+				UML_LOAD(block, I1, base, (addr & 2) ^ 2, SIZE_WORD, SCALE_x1);
 				UML_ADD(block, I0, I0, I1);
 
 				sum += seqhead->delay.first()->opptr.w[0];
@@ -569,23 +567,26 @@ void hyperstone_device::generate_checksum_block(drcuml_block *block, compiler_st
 	}
 	else /* full verification; sum up everything */
 	{
-		void *base = m_direct->read_ptr(seqhead->physpc);
-		UML_LOAD(block, I0, base, 0, SIZE_WORD, SCALE_x2);
+		uint32_t addr = seqhead->physpc;
+		void *base = m_direct->read_ptr(addr);
+		UML_LOAD(block, I0, base, (addr & 2) ^ 2, SIZE_WORD, SCALE_x1);
 		uint32_t sum = seqhead->opptr.w[0];
 		for (curdesc = seqhead->next(); curdesc != seqlast->next(); curdesc = curdesc->next())
 			if (!(curdesc->flags & OPFLAG_VIRTUAL_NOOP))
 			{
-				base = m_direct->read_ptr(curdesc->physpc);
+				addr = curdesc->physpc;
+				base = m_direct->read_ptr(addr);
 				assert(base != nullptr);
-				UML_LOAD(block, I1, base, 0, SIZE_WORD, SCALE_x2);
+				UML_LOAD(block, I1, base, (addr & 2) ^ 2, SIZE_WORD, SCALE_x1);
 				UML_ADD(block, I0, I0, I1);
 				sum += curdesc->opptr.w[0];
 
 				if (curdesc->delay.first() != nullptr && (curdesc == seqlast || (curdesc->next() != nullptr && curdesc->next()->physpc != curdesc->delay.first()->physpc)))
 				{
-					base = m_direct->read_ptr(curdesc->delay.first()->physpc);
+					addr = curdesc->delay.first()->physpc;
+					base = m_direct->read_ptr(addr);
 					assert(base != nullptr);
-					UML_LOAD(block, I1, base, 0, SIZE_WORD, SCALE_x2);
+					UML_LOAD(block, I1, base, (addr & 2) ^ 2, SIZE_WORD, SCALE_x1);
 					UML_ADD(block, I0, I0, I1);
 
 					sum += curdesc->delay.first()->opptr.w[0];
@@ -638,19 +639,12 @@ void hyperstone_device::generate_delay_slot_and_branch(drcuml_block *block, comp
 	{
 		generate_update_cycles(block, &compiler_temp, desc->targetpc);
 		if (desc->flags & OPFLAG_INTRABLOCK_BRANCH)
-		{
-			printf("1\n");
 			UML_JMP(block, desc->targetpc | 0x80000000);
-		}
 		else
-		{
-			printf("2: %08x\n", desc->targetpc);
 			UML_HASHJMP(block, 0, desc->targetpc, *m_nocode);
-		}
 	}
 	else
 	{
-		printf("3\n");
 		generate_update_cycles(block, &compiler_temp, mem(&m_branch_dest));
 		UML_HASHJMP(block, 0, mem(&m_branch_dest), *m_nocode);
 	}
