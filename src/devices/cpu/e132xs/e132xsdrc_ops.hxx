@@ -1860,9 +1860,262 @@ void hyperstone_device::generate_ldxx1(drcuml_block *block, compiler_state *comp
 template <hyperstone_device::reg_bank DST_GLOBAL, hyperstone_device::reg_bank SRC_GLOBAL>
 void hyperstone_device::generate_ldxx2(drcuml_block *block, compiler_state *compiler, const opcode_desc *desc)
 {
-	printf("Unimplemented: generate_ldxx2 (%08x)\n", desc->pc);
-	fflush(stdout);
-	fatalerror(" ");
+	const uint16_t op = desc->opptr.w[0];
+	uint16_t next_1 = READ_OP(desc->pc + 2);
+	const uint16_t sub_type = (next_1 & 0x3000) >> 12;
+
+	uint32_t extra_s;
+	if (next_1 & 0x8000)
+	{
+		const uint16_t next_2 = READ_OP(desc->pc + 4);
+
+		extra_s = next_2;
+		extra_s |= ((next_1 & 0xfff) << 16);
+
+		if (next_1 & 0x4000)
+			extra_s |= 0xf0000000;
+
+		UML_MOV(block, mem(&m_instruction_length), (3<<19));
+		UML_ADD(block, DRC_PC, DRC_PC, 4);
+	}
+	else
+	{
+		extra_s = next_1 & 0xfff;
+
+		if (next_1 & 0x4000)
+			extra_s |= 0xfffff000;
+
+		UML_MOV(block, mem(&m_instruction_length), (2<<19));
+		UML_ADD(block, DRC_PC, DRC_PC, 2);
+	}
+
+	generate_check_delay_pc(block);
+
+	const uint32_t src_code = op & 0xf;
+	const uint32_t srcf_code = src_code + 1;
+	const uint32_t dst_code = (op & 0xf0) >> 4;
+
+	if (DST_GLOBAL && dst_code < 2)
+	{
+		printf("Denoted PC or SR in hyperstone_ldxx2. PC = %08X\n", desc->pc);
+		return;
+	}
+
+	if (!DST_GLOBAL || !SRC_GLOBAL)
+		UML_ROLAND(block, I3, DRC_SR, 7, 0x7f);
+
+	if (DST_GLOBAL)
+	{
+		UML_LOAD(block, I6, (void *)m_global_regs, dst_code, SIZE_DWORD, SCALE_x4);
+	}
+	else
+	{
+		UML_ADD(block, I2, I3, dst_code);
+		UML_AND(block, I5, I2, 0x3f);
+		UML_LOAD(block, I6, (void *)m_local_regs, I5, SIZE_DWORD, SCALE_x4);
+	}
+
+	switch (sub_type)
+	{
+		case 0: // LDBS.N
+		case 1: // LDBU.N
+		case 2: // LDHS.N, LDHU.N
+		{
+			UML_MOV(block, I0, I6);
+			if (sub_type == 0)
+			{
+				UML_CALLH(block, *m_mem_read8);
+				UML_SEXT(block, I5, I1, SIZE_BYTE);
+			}
+			else if (sub_type == 2)
+			{
+				UML_CALLH(block, *m_mem_read16);
+				if (extra_s & 1)
+					UML_SEXT(block, I5, I1, SIZE_WORD);
+				else
+					UML_MOV(block, I5, I1);
+			}
+			else
+			{
+				UML_MOV(block, I5, I1);
+			}
+
+			if (SRC_GLOBAL)
+			{
+				UML_MOV(block, I4, src_code);
+				generate_set_global_register(block, compiler, desc);
+			}
+			else
+			{
+				UML_ADD(block, I2, I3, src_code);
+				UML_AND(block, I4, I2, 0x3f);
+				UML_STORE(block, (void *)m_local_regs, I4, I5, SIZE_DWORD, SCALE_x4);
+			}
+
+			if (DST_GLOBAL != SRC_GLOBAL || src_code != dst_code)
+			{
+				if (sub_type == 2)
+					UML_ADD(block, I4, I6, extra_s & ~1);
+				else
+					UML_ADD(block, I4, I6, extra_s);
+
+				if (DST_GLOBAL)
+				{
+					UML_STORE(block, (void *)m_global_regs, dst_code, I4, SIZE_DWORD, SCALE_x4);
+				}
+				else
+				{
+					UML_ADD(block, I2, I3, dst_code);
+					UML_AND(block, I5, I2, 0x3f);
+					UML_STORE(block, (void *)m_local_regs, I5, I4, SIZE_DWORD, SCALE_x4);
+				}
+			}
+			break;
+		}
+		case 3:
+			switch (extra_s & 3)
+			{
+				case 0: // LDW.N
+				{
+					UML_MOV(block, I0, I6);
+					if (sub_type == 0)
+					UML_CALLH(block, *m_mem_read32);
+
+					if (SRC_GLOBAL)
+					{
+						UML_MOV(block, I4, src_code);
+						UML_MOV(block, I5, I1);
+						generate_set_global_register(block, compiler, desc);
+					}
+					else
+					{
+						UML_ADD(block, I2, I3, src_code);
+						UML_AND(block, I4, I2, 0x3f);
+						UML_STORE(block, (void *)m_local_regs, I4, I1, SIZE_DWORD, SCALE_x4);
+					}
+
+					if (DST_GLOBAL != SRC_GLOBAL || src_code != dst_code)
+					{
+						UML_ADD(block, I4, I6, extra_s);
+
+						if (DST_GLOBAL)
+						{
+							UML_STORE(block, (void *)m_global_regs, dst_code, I4, SIZE_DWORD, SCALE_x4);
+						}
+						else
+						{
+							UML_ADD(block, I2, I3, dst_code);
+							UML_AND(block, I5, I2, 0x3f);
+							UML_STORE(block, (void *)m_local_regs, I5, I4, SIZE_DWORD, SCALE_x4);
+						}
+					}
+					break;
+				}
+				case 1: // LDD.N
+				{
+					UML_MOV(block, I0, I6);
+					if (sub_type == 0)
+					UML_CALLH(block, *m_mem_read32);
+
+					if (SRC_GLOBAL)
+					{
+						UML_MOV(block, I4, src_code);
+						UML_MOV(block, I5, I1);
+						generate_set_global_register(block, compiler, desc);
+
+						UML_ADD(block, I0, I0, 4);
+						UML_CALLH(block, *m_mem_read32);
+
+						UML_MOV(block, I4, src_code);
+						UML_MOV(block, I5, I1);
+						generate_set_global_register(block, compiler, desc);
+					}
+					else
+					{
+						UML_ADD(block, I2, I3, src_code);
+						UML_AND(block, I4, I2, 0x3f);
+						UML_STORE(block, (void *)m_local_regs, I4, I5, SIZE_DWORD, SCALE_x4);
+
+						UML_ADD(block, I0, I0, 4);
+						UML_CALLH(block, *m_mem_read32);
+
+						UML_ADD(block, I2, I3, srcf_code);
+						UML_AND(block, I4, I2, 0x3f);
+						UML_STORE(block, (void *)m_local_regs, I4, I5, SIZE_DWORD, SCALE_x4);
+					}
+
+					if (DST_GLOBAL != SRC_GLOBAL || src_code != dst_code)
+					{
+						UML_ADD(block, I4, I6, extra_s & ~1);
+
+						if (DST_GLOBAL)
+						{
+							UML_STORE(block, (void *)m_global_regs, dst_code, I4, SIZE_DWORD, SCALE_x4);
+						}
+						else
+						{
+							UML_ADD(block, I2, I3, dst_code);
+							UML_AND(block, I5, I2, 0x3f);
+							UML_STORE(block, (void *)m_local_regs, I5, I4, SIZE_DWORD, SCALE_x4);
+						}
+					}
+					break;
+				}
+				case 2: // Reserved
+					printf("Reserved instruction in generate_ldxx2. PC = %08X\n", desc->pc);
+					break;
+				case 3: // LDW.S
+				{
+					int below_sp = compiler->m_labelnum++;
+					int done = compiler->m_labelnum++;
+
+					UML_MOV(block, I2, mem(&m_global_regs[1]));
+					UML_CMP(block, I6, I2);
+					UML_JMPc(block, uml::COND_B, below_sp);
+
+					UML_ROLAND(block, I0, I6, 30, 0x3f);
+					UML_LOAD(block, I1, (void *)m_local_regs, I0, SIZE_DWORD, SCALE_x4);
+					UML_JMP(block, done);
+
+					UML_LABEL(block, below_sp);
+					UML_MOV(block, I0, I6);
+					UML_CALLH(block, *m_mem_read32);
+
+					UML_LABEL(block, done);
+
+					if (SRC_GLOBAL)
+					{
+						UML_MOV(block, I4, src_code);
+						UML_MOV(block, I5, I1);
+						generate_set_global_register(block, compiler, desc);
+					}
+					else
+					{
+						UML_ADD(block, I2, I3, src_code);
+						UML_AND(block, I4, I2, 0x3f);
+						UML_STORE(block, (void *)m_local_regs, I4, I1, SIZE_DWORD, SCALE_x4);
+					}
+
+					if (DST_GLOBAL != SRC_GLOBAL || src_code != dst_code)
+					{
+						UML_ADD(block, I4, I6, extra_s & ~3);
+
+						if (DST_GLOBAL)
+						{
+							UML_STORE(block, (void *)m_global_regs, dst_code, I4, SIZE_DWORD, SCALE_x4);
+						}
+						else
+						{
+							UML_ADD(block, I2, I3, dst_code);
+							UML_AND(block, I5, I2, 0x3f);
+							UML_STORE(block, (void *)m_local_regs, I5, I4, SIZE_DWORD, SCALE_x4);
+						}
+					}
+					break;
+				}
+			}
+			break;
+	}
 }
 
 
