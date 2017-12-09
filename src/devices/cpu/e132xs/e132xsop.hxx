@@ -1873,7 +1873,7 @@ void hyperstone_device::hyperstone_stxx1()
 				case 1: // STD.D
 				{
 					const uint32_t srcf_code = SRC_GLOBAL ? (src_code + 1) : ((src_code + 1) & 0x3f);
-					const uint32_t sregf = ((SRC_GLOBAL && src_code == SR_REGISTER) ? 0 : (SRC_GLOBAL ? m_global_regs : m_local_regs)[srcf_code]);
+					const uint32_t sregf = ((SRC_GLOBAL && srcf_code == SR_REGISTER) ? 0 : (SRC_GLOBAL ? m_global_regs : m_local_regs)[srcf_code]);
 					extra_s &= ~1;
 					WRITE_W(dreg + extra_s, sreg);
 					WRITE_W(dreg + extra_s + 4, sregf);
@@ -1886,7 +1886,7 @@ void hyperstone_device::hyperstone_stxx1()
 				case 3: // STD.IOD
 				{
 					const uint32_t srcf_code = SRC_GLOBAL ? (src_code + 1) : ((src_code + 1) & 0x3f);
-					const uint32_t sregf = ((SRC_GLOBAL && src_code == SR_REGISTER) ? 0 : (SRC_GLOBAL ? m_global_regs : m_local_regs)[srcf_code]);
+					const uint32_t sregf = ((SRC_GLOBAL && srcf_code == SR_REGISTER) ? 0 : (SRC_GLOBAL ? m_global_regs : m_local_regs)[srcf_code]);
 					extra_s &= ~3;
 					IO_WRITE_W(dreg + extra_s, sreg);
 					IO_WRITE_W(dreg + extra_s + 4, sregf);
@@ -1972,15 +1972,12 @@ void hyperstone_device::hyperstone_stxx2()
 					break;
 				case 1: // STD.N
 				{
-					const uint32_t srcf_code = SRC_GLOBAL ? (src_code + 1) : ((src_code + 1) & 0x3f);
-					const uint32_t sregf = (SRC_GLOBAL && src_code == SR_REGISTER) ? 0 : (SRC_GLOBAL ? m_global_regs : m_local_regs)[srcf_code];
 					WRITE_W(dreg, sreg);
 					(DST_GLOBAL ? m_global_regs : m_local_regs)[dst_code] += extra_s & ~1;
 
-					if(DST_GLOBAL == SRC_GLOBAL && (src_code + 1) == dst_code)
-						WRITE_W(dreg + 4, sregf + (extra_s & ~1));  // because DREG == SREGF and DREG has been incremented
-					else
-						WRITE_W(dreg + 4, sregf);
+					const uint32_t srcf_code = SRC_GLOBAL ? (src_code + 1) : ((src_code + 1) & 0x3f);
+					const uint32_t sregf = (SRC_GLOBAL && srcf_code == SR_REGISTER) ? 0 : (SRC_GLOBAL ? m_global_regs : m_local_regs)[srcf_code];
+					WRITE_W(dreg + 4, sregf);
 
 					m_icount -= m_clock_cycles_1; // extra cycle
 					break;
