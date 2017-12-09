@@ -2079,7 +2079,12 @@ void hyperstone_device::hyperstone_shli()
 
 	const uint32_t n = HI_N ? HI_N_VALUE : LO_N_VALUE;
 	SR &= ~(C_MASK | V_MASK | Z_MASK | N_MASK);
-	SR |= (HI_N || n) ? (((val << (n - 1)) & 0x80000000) ? 1 : 0) : 0;
+
+	if (HI_N || n)
+	{
+		SR |= (val & (0x80000000 >> (n - 1))) ? 1 : 0;
+	}
+
 	uint64_t mask = ((1U << (32 - n)) - 1) ^ 0xffffffff;
 	uint32_t val2 = val << n;
 
