@@ -348,9 +348,6 @@ void hyperstone_device::static_generate_exception(uint32_t exception, const char
 	UML_MOVc(block, uml::COND_Z, I2, 16);
 	UML_ADD(block, I1, I1, I2);
 
-	UML_AND(block, DRC_SR, DRC_SR, 0xffe7ffff);
-	UML_OR(block, DRC_SR, DRC_SR, mem(&m_instruction_length));
-
 	UML_MOV(block, I4, DRC_SR);
 	UML_ROLINS(block, DRC_SR, 2, 21, 0x01e00000);
 	UML_ROLINS(block, DRC_SR, I1, 25, 0xfe000000);
@@ -709,7 +706,7 @@ bool hyperstone_device::generate_opcode(drcuml_block *block, compiler_state *com
 	UML_MOV(block, I0, op);
 	UML_AND(block, I7, DRC_SR, H_MASK);
 	UML_ADD(block, DRC_PC, DRC_PC, 2);
-	UML_MOV(block, mem(&m_instruction_length), (1 << 19));
+	UML_ROLINS(block, DRC_SR, (1<<19), 0, ILC_MASK);
 
 	switch (op >> 8)
 	{
@@ -970,9 +967,6 @@ bool hyperstone_device::generate_opcode(drcuml_block *block, compiler_state *com
 		case 0xfe: generate_trap_op(block, compiler, desc); break;
 		case 0xff: generate_trap_op(block, compiler, desc); break;
 	}
-
-	UML_AND(block, DRC_SR, DRC_SR, ~ILC_MASK);
-	UML_OR(block, DRC_SR, DRC_SR, mem(&m_instruction_length));
 
 	int done;
 	UML_AND(block, I0, DRC_SR, (T_MASK | P_MASK));

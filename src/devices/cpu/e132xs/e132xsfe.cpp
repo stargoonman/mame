@@ -95,10 +95,13 @@ inline uint32_t e132xs_frontend::read_limm(opcode_desc &desc, uint16_t op)
 		case 0:
 			return 16;
 		case 1:
+			desc.length = 6;
 			return (read_imm1(desc) << 16) | read_imm2(desc);
 		case 2:
+			desc.length = 4;
 			return read_imm1(desc);
 		case 3:
+			desc.length = 4;
 			return 0xffff0000 | read_imm1(desc);
 		default:
 			return immediate_values[nybble];
@@ -1340,9 +1343,12 @@ bool e132xs_frontend::describe(opcode_desc &desc, const opcode_desc *prev)
 			desc.flags |= OPFLAG_IS_CONDITIONAL_BRANCH;
 			break;
 		case 0xfc: // br
-			desc.targetpc = (desc.pc + 2) + decode_pcrel(desc, op);
+		{
+			int32_t offset = decode_pcrel(desc, op);
+			desc.targetpc = (desc.pc + desc.length) + offset;
 			desc.flags |= OPFLAG_IS_UNCONDITIONAL_BRANCH | OPFLAG_END_SEQUENCE;
 			break;
+		}
 		case 0xfd: case 0xfe: case 0xff: // trap
 			desc.regin[0] |= SR_CODE;
 			desc.targetpc = BRANCH_TARGET_DYNAMIC;

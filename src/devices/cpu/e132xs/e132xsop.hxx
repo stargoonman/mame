@@ -55,8 +55,6 @@ void hyperstone_device::hyperstone_movd()
 		if (m_intblock < 1)
 			m_intblock = 1;
 
-		m_instruction_length = 0; // undefined
-
 		const uint32_t new_s = SR & S_MASK;
 		const uint32_t new_l = SR & L_MASK;
 		if( (!old_s && new_s) || (!new_s && !old_l && new_l))
