@@ -461,6 +461,11 @@ bool e132xs_frontend::describe(opcode_desc &desc, const opcode_desc *prev)
 			desc.regout[0] |= 1 << gdst_code;
 			desc.regout[0] |= SR_CODE;
 			if (op & 0x04) desc.flags |= OPFLAG_CAN_CAUSE_EXCEPTION; // adds, subs
+			if (gdst_code == PC_REGISTER)
+			{
+				desc.targetpc = BRANCH_TARGET_DYNAMIC;
+				desc.flags |= OPFLAG_IS_UNCONDITIONAL_BRANCH | OPFLAG_END_SEQUENCE;
+			}
 			break;
 		case 0x29: // add global,local
 		case 0x2d: // adds global,local
@@ -472,6 +477,11 @@ bool e132xs_frontend::describe(opcode_desc &desc, const opcode_desc *prev)
 			desc.regout[0] |= 1 << gdst_code;
 			desc.regout[0] |= SR_CODE;
 			if (op & 0x04) desc.flags |= OPFLAG_CAN_CAUSE_EXCEPTION; // adds, subs
+			if (gdst_code == PC_REGISTER)
+			{
+				desc.targetpc = BRANCH_TARGET_DYNAMIC;
+				desc.flags |= OPFLAG_IS_UNCONDITIONAL_BRANCH | OPFLAG_END_SEQUENCE;
+			}
 			break;
 		case 0x2a: // add local,global
 		case 0x2e: // adds local,global
@@ -503,6 +513,11 @@ bool e132xs_frontend::describe(opcode_desc &desc, const opcode_desc *prev)
 			desc.regin[0] |= 1 << gdst_code;
 			desc.regout[0] |= 1 << gdst_code;
 			desc.regout[0] |= SR_CODE;
+			if (gdst_code == PC_REGISTER)
+			{
+				desc.targetpc = BRANCH_TARGET_DYNAMIC;
+				desc.flags |= OPFLAG_IS_UNCONDITIONAL_BRANCH | OPFLAG_END_SEQUENCE;
+			}
 			break;
 		case 0x35: // andn global,local
 		case 0x39: // or global,local
@@ -513,6 +528,11 @@ bool e132xs_frontend::describe(opcode_desc &desc, const opcode_desc *prev)
 			desc.regin[0] |= 1 << gdst_code;
 			desc.regout[0] |= 1 << gdst_code;
 			desc.regout[0] |= SR_CODE;
+			if (gdst_code == PC_REGISTER)
+			{
+				desc.targetpc = BRANCH_TARGET_DYNAMIC;
+				desc.flags |= OPFLAG_IS_UNCONDITIONAL_BRANCH | OPFLAG_END_SEQUENCE;
+			}
 			break;
 		case 0x36: // andn local,global
 		case 0x3a: // or local,global
@@ -541,6 +561,11 @@ bool e132xs_frontend::describe(opcode_desc &desc, const opcode_desc *prev)
 			desc.regin[0] |= 1 << gdst_code;
 			desc.regout[0] |= 1 << gdst_code;
 			desc.regout[0] |= SR_CODE;
+			if (gdst_code == PC_REGISTER)
+			{
+				desc.targetpc = BRANCH_TARGET_DYNAMIC;
+				desc.flags |= OPFLAG_IS_UNCONDITIONAL_BRANCH | OPFLAG_END_SEQUENCE;
+			}
 			break;
 		case 0x41: // subc global,local
 		case 0x51: // addc global,local
@@ -549,6 +574,11 @@ bool e132xs_frontend::describe(opcode_desc &desc, const opcode_desc *prev)
 			desc.regin[0] |= 1 << gdst_code;
 			desc.regout[0] |= 1 << gdst_code;
 			desc.regout[0] |= SR_CODE;
+			if (gdst_code == PC_REGISTER)
+			{
+				desc.targetpc = BRANCH_TARGET_DYNAMIC;
+				desc.flags |= OPFLAG_IS_UNCONDITIONAL_BRANCH | OPFLAG_END_SEQUENCE;
+			}
 			break;
 		case 0x42: // subc local,global
 		case 0x52: // addc local,global
@@ -571,6 +601,11 @@ bool e132xs_frontend::describe(opcode_desc &desc, const opcode_desc *prev)
 			desc.regin[0] |= 1 << gsrc_code;
 			desc.regout[0] |= 1 << gdst_code;
 			desc.regout[0] |= SR_CODE;
+			if (gdst_code == PC_REGISTER)
+			{
+				desc.targetpc = BRANCH_TARGET_DYNAMIC;
+				desc.flags |= OPFLAG_IS_UNCONDITIONAL_BRANCH | OPFLAG_END_SEQUENCE;
+			}
 			break;
 		case 0x45: // not global,local
 		case 0x59: // neg global,local
@@ -578,6 +613,11 @@ bool e132xs_frontend::describe(opcode_desc &desc, const opcode_desc *prev)
 			desc.regin[lsrc_group] |= 1 << lsrc_code;
 			desc.regout[0] |= 1 << gdst_code;
 			desc.regout[0] |= SR_CODE;
+			if (gdst_code == PC_REGISTER)
+			{
+				desc.targetpc = BRANCH_TARGET_DYNAMIC;
+				desc.flags |= OPFLAG_IS_UNCONDITIONAL_BRANCH | OPFLAG_END_SEQUENCE;
+			}
 			break;
 		case 0x46: // not local,global
 		case 0x5a: // neg local,global
@@ -598,6 +638,11 @@ bool e132xs_frontend::describe(opcode_desc &desc, const opcode_desc *prev)
 			desc.regout[0] |= 1 << gdst_code;
 			desc.regout[0] |= SR_CODE;
 			desc.flags |= OPFLAG_CAN_CAUSE_EXCEPTION;
+			if (gdst_code == PC_REGISTER)
+			{
+				desc.targetpc = BRANCH_TARGET_DYNAMIC;
+				desc.flags |= OPFLAG_IS_UNCONDITIONAL_BRANCH | OPFLAG_END_SEQUENCE;
+			}
 			break;
 		case 0x5d: // negs global,local
 			desc.regin[0] |= SR_CODE;
@@ -605,6 +650,11 @@ bool e132xs_frontend::describe(opcode_desc &desc, const opcode_desc *prev)
 			desc.regout[0] |= 1 << gdst_code;
 			desc.regout[0] |= SR_CODE;
 			desc.flags |= OPFLAG_CAN_CAUSE_EXCEPTION;
+			if (gdst_code == PC_REGISTER)
+			{
+				desc.targetpc = BRANCH_TARGET_DYNAMIC;
+				desc.flags |= OPFLAG_IS_UNCONDITIONAL_BRANCH | OPFLAG_END_SEQUENCE;
+			}
 			break;
 		case 0x5e: // negs local,global
 			desc.regin[0] |= SR_CODE;

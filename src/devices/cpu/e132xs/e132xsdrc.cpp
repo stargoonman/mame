@@ -547,15 +547,15 @@ void hyperstone_device::generate_checksum_block(drcuml_block *block, compiler_st
 		{
 			uint32_t sum = seqhead->opptr.w[0];
 			uint32_t addr = seqhead->physpc;
-			void *base = m_direct->read_ptr(addr);
-			UML_LOAD(block, I0, base, (addr & 2) ^ 2, SIZE_WORD, SCALE_x1);
+			void *base = m_direct->read_ptr(addr, m_opcodexor);
+			UML_LOAD(block, I0, base, 0, SIZE_WORD, SCALE_x1);
 
 			if (seqhead->delay.first() != nullptr && seqhead->physpc != seqhead->delay.first()->physpc)
 			{
 				addr = seqhead->delay.first()->physpc;
-				base = m_direct->read_ptr(addr);
+				base = m_direct->read_ptr(addr, m_opcodexor);
 				assert(base != nullptr);
-				UML_LOAD(block, I1, base, (addr & 2) ^ 2, SIZE_WORD, SCALE_x1);
+				UML_LOAD(block, I1, base, 0, SIZE_WORD, SCALE_x1);
 				UML_ADD(block, I0, I0, I1);
 
 				sum += seqhead->delay.first()->opptr.w[0];
@@ -568,25 +568,25 @@ void hyperstone_device::generate_checksum_block(drcuml_block *block, compiler_st
 	else /* full verification; sum up everything */
 	{
 		uint32_t addr = seqhead->physpc;
-		void *base = m_direct->read_ptr(addr);
-		UML_LOAD(block, I0, base, (addr & 2) ^ 2, SIZE_WORD, SCALE_x1);
+		void *base = m_direct->read_ptr(addr, m_opcodexor);
+		UML_LOAD(block, I0, base, 0, SIZE_WORD, SCALE_x1);
 		uint32_t sum = seqhead->opptr.w[0];
 		for (curdesc = seqhead->next(); curdesc != seqlast->next(); curdesc = curdesc->next())
 			if (!(curdesc->flags & OPFLAG_VIRTUAL_NOOP))
 			{
 				addr = curdesc->physpc;
-				base = m_direct->read_ptr(addr);
+				base = m_direct->read_ptr(addr, m_opcodexor);
 				assert(base != nullptr);
-				UML_LOAD(block, I1, base, (addr & 2) ^ 2, SIZE_WORD, SCALE_x1);
+				UML_LOAD(block, I1, base, 0, SIZE_WORD, SCALE_x1);
 				UML_ADD(block, I0, I0, I1);
 				sum += curdesc->opptr.w[0];
 
 				if (curdesc->delay.first() != nullptr && (curdesc == seqlast || (curdesc->next() != nullptr && curdesc->next()->physpc != curdesc->delay.first()->physpc)))
 				{
 					addr = curdesc->delay.first()->physpc;
-					base = m_direct->read_ptr(addr);
+					base = m_direct->read_ptr(addr, m_opcodexor);
 					assert(base != nullptr);
-					UML_LOAD(block, I1, base, (addr & 2) ^ 2, SIZE_WORD, SCALE_x1);
+					UML_LOAD(block, I1, base, 0, SIZE_WORD, SCALE_x1);
 					UML_ADD(block, I0, I0, I1);
 
 					sum += curdesc->delay.first()->opptr.w[0];
