@@ -93,6 +93,13 @@ static void cfunc_print(void *param)
 }
 #endif
 
+#if E132XS_LOG_DRC_REGS
+static void cfunc_dump_registers(void *param)
+{
+	((hyperstone_device *)param)->dump_registers();
+}
+#endif
+
 /*-------------------------------------------------
     ccfunc_total_cycles - compute the total number
     of cycles executed so far
@@ -677,6 +684,10 @@ void hyperstone_device::generate_sequence_instruction(drcuml_block *block, compi
 	/* update the icount map variable */
 	UML_MAPVAR(block, MAPVAR_CYCLES, compiler->m_cycles);
 
+#if E132XS_LOG_DRC_REGS
+	UML_CALLC(block, cfunc_dump_registers, this);
+#endif
+
 	/* if we are debugging, call the debugger */
 	if ((machine().debug_flags & DEBUG_FLAG_ENABLED) != 0)
 	{
@@ -684,6 +695,8 @@ void hyperstone_device::generate_sequence_instruction(drcuml_block *block, compi
 		//save_fast_iregs(block);
 		UML_DEBUG(block, desc->pc);
 	}
+
+	UML_ROLINS(block, DRC_SR, (1<<19), 0, ILC_MASK);
 
 	if (!(desc->flags & OPFLAG_VIRTUAL_NOOP))
 	{
@@ -706,7 +719,6 @@ bool hyperstone_device::generate_opcode(drcuml_block *block, compiler_state *com
 	UML_MOV(block, I0, op);
 	UML_AND(block, I7, DRC_SR, H_MASK);
 	UML_ADD(block, DRC_PC, DRC_PC, 2);
-	UML_ROLINS(block, DRC_SR, (1<<19), 0, ILC_MASK);
 
 	switch (op >> 8)
 	{

@@ -2631,6 +2631,7 @@ void hyperstone_device::hyperstone_call()
 
 		PC += 2;
 		SET_ILC(3<<19);
+		m_instruction_length = (3<<19);
 
 		extra_s = imm_2;
 		extra_s |= ((imm_1 & 0x3fff) << 16);
@@ -2643,6 +2644,7 @@ void hyperstone_device::hyperstone_call()
 		extra_s = imm_1 & 0x3fff;
 
 		SET_ILC(2<<19);
+		m_instruction_length = (2<<19);
 
 		if (imm_1 & 0x4000)
 			extra_s |= 0xffffc000;

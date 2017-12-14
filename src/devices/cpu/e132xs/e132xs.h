@@ -52,6 +52,9 @@
 
 #define ENABLE_E132XS_DRC				(1)
 
+#define E132XS_LOG_DRC_REGS				(0)
+#define E132XS_LOG_INTERPRETER_REGS		(0)
+
 //**************************************************************************
 //  TYPE DEFINITIONS
 //**************************************************************************
@@ -69,6 +72,9 @@ public:
 	inline void ccfunc_unimplemented();
 	inline void ccfunc_print();
 	inline void ccfunc_total_cycles();
+#if E132XS_LOG_DRC_REGS || E132XS_LOG_INTERPRETER_REGS
+	void dump_registers();
+#endif
 	void update_timer_prescale();
 	void compute_tr();
 	void adjust_timer_interrupt();
@@ -374,6 +380,10 @@ private:
 
 	void hyperstone_reserved();
 	void hyperstone_do();
+
+#if E132XS_LOG_DRC_REGS || E132XS_LOG_INTERPRETER_REGS
+	FILE *m_trace_log;
+#endif
 
 	drc_cache m_cache;
 	std::unique_ptr<drcuml_state> m_drcuml;

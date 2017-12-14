@@ -410,6 +410,15 @@ uint32_t hyperstone_device::get_emu_code_addr(uint8_t num) /* num is OP */
 	0xffffff00, // MEM3
 };
 
+#if E132XS_LOG_INTERPRETER_REGS
+void hyperstone_device::dump_registers()
+{
+	fwrite(&m_icount, 4, 1, m_trace_log);
+	fwrite(m_global_regs, 4, 32, m_trace_log);
+	fwrite(m_local_regs, 4, 64, m_trace_log);
+}
+#endif
+
 void hyperstone_device::compute_tr()
 {
 	uint64_t cycles_since_base = total_cycles() - m_tr_base_cycles;
@@ -1023,6 +1032,13 @@ void hyperstone_device::init(int scale_mask)
 	m_enable_drc = false;
 #endif
 
+#if E132XS_LOG_DRC_REGS || E132XS_LOG_INTERPRETER_REGS
+	if (m_enable_drc)
+		m_trace_log = fopen("e1_drc.log", "wb");
+	else
+		m_trace_log = fopen("e1_interpreter.log", "wb");
+#endif
+
 	memset(m_global_regs, 0, sizeof(uint32_t) * 32);
 	memset(m_local_regs, 0, sizeof(uint32_t) * 64);
 	m_op = 0;
@@ -1338,6 +1354,7 @@ void hyperstone_device::device_reset()
 	SET_T(0);
 	SET_L(1);
 	SET_S(1);
+	SET_ILC(1<<19);
 
 	set_local_register(0, (PC & 0xfffffffe) | GET_S);
 	set_local_register(1, SR);
@@ -1355,6 +1372,9 @@ void hyperstone_device::device_stop()
 	{
 		m_drcuml = nullptr;
 	}
+#if E132XS_LOG_DRC_REGS || E132XS_LOG_INTERPRETER_REGS
+	fclose(m_trace_log);
+#endif
 }
 
 
@@ -1535,6 +1555,10 @@ void hyperstone_device::execute_run()
 	do
 	{
 		uint32_t oldh = SR & 0x00000020;
+
+#if E132XS_LOG_INTERPRETER_REGS
+		dump_registers();
+#endif
 
 		debugger_instruction_hook(this, PC);
 
