@@ -52,8 +52,8 @@
 
 #define ENABLE_E132XS_DRC				(1)
 
-#define E132XS_LOG_DRC_REGS				(0)
-#define E132XS_LOG_INTERPRETER_REGS		(0)
+#define E132XS_LOG_DRC_REGS				(1)
+#define E132XS_LOG_INTERPRETER_REGS		(1)
 
 //**************************************************************************
 //  TYPE DEFINITIONS
@@ -245,11 +245,12 @@ protected:
 
 	uint8_t   m_clock_scale_mask;
 	uint8_t   m_clck_scale;
-	uint8_t   m_clock_cycles_1;
-	uint8_t   m_clock_cycles_2;
-	uint8_t   m_clock_cycles_3;
-	uint8_t   m_clock_cycles_4;
-	uint8_t   m_clock_cycles_6;
+	uint32_t   m_clock_cycles_1;
+	uint32_t   m_clock_cycles_2;
+	uint32_t   m_clock_cycles_3;
+	uint32_t   m_clock_cycles_4;
+	uint32_t   m_clock_cycles_6;
+	uint32_t   m_clock_cycles_36;
 
 	uint64_t  m_tr_base_cycles;
 	uint32_t  m_tr_base_value;
@@ -442,13 +443,14 @@ private:
 	bool generate_opcode(drcuml_block *block, compiler_state *compiler, const opcode_desc *desc);
 
 	void generate_get_trap_addr(drcuml_block *block, uml::code_label &label, uint32_t trapno);
-	void generate_check_delay_pc(drcuml_block *block);
+	void generate_check_delay_pc(drcuml_block *block, compiler_state *compiler, const opcode_desc *desc);
 	void generate_decode_const(drcuml_block *block, compiler_state *compiler, const opcode_desc *desc);
 	void generate_decode_immediate_s(drcuml_block *block, compiler_state *compiler, const opcode_desc *desc);
 	void generate_ignore_immediate_s(drcuml_block *block, const opcode_desc *desc);
 	void generate_decode_pcrel(drcuml_block *block, const opcode_desc *desc);
 	void generate_ignore_pcrel(drcuml_block *block, const opcode_desc *desc);
 
+	void generate_get_global_register(drcuml_block *block, compiler_state *compiler, const opcode_desc *desc);
 	void generate_set_global_register(drcuml_block *block, compiler_state *compiler, const opcode_desc *desc);
 
 	void generate_trap(drcuml_block *block, compiler_state *compiler, const opcode_desc *desc);

@@ -435,6 +435,7 @@ void hyperstone_device::update_timer_prescale()
 	m_clock_cycles_3 = 3 << m_clck_scale;
 	m_clock_cycles_4 = 4 << m_clck_scale;
 	m_clock_cycles_6 = 6 << m_clck_scale;
+	m_clock_cycles_36 = 36 << m_clck_scale;
 	m_tr_clocks_per_tick = ((TPR >> 16) & 0xff) + 2;
 	m_tr_base_value = m_tr_result;
 	m_tr_base_cycles = total_cycles();
@@ -647,17 +648,6 @@ void hyperstone_device::set_global_register(uint8_t code, uint32_t val)
 			return;
 	}
 }
-
-#define S_BIT                   ((OP & 0x100) >> 8)
-#define D_BIT                   ((OP & 0x200) >> 9)
-#define N_VALUE                 (((OP & 0x100) >> 4) | (OP & 0x0f))
-#define HI_N_VALUE              (0x10 | (OP & 0x0f))
-#define LO_N_VALUE              (OP & 0x0f)
-#define N_OP_MASK               (m_op & 0x10f)
-#define DST_CODE                ((OP & 0xf0) >> 4)
-#define SRC_CODE                (OP & 0x0f)
-#define SIGN_BIT(val)           ((val & 0x80000000) >> 31)
-#define SIGN_TO_N(val)          ((val & 0x80000000) >> 29)
 
 /*static*/ const int32_t hyperstone_device::s_immediate_values[16] =
 {
@@ -878,18 +868,16 @@ void hyperstone_device::execute_software()
 	//since it's sure the register is in the register part of the stack,
 	//set the stack address to a value above the highest address
 	//that can be set by a following frame instruction
-	const uint32_t stack_of_dst = (SP & ~0xff) + 64*4 + (((fp + DST_CODE) % 64) * 4); //converted to 32bits offset
-
-	const uint32_t oldSR = SR;
-
-	SET_FL(6);
-	SET_FP(reg);
+	const uint32_t stack_of_dst = (SP & ~0xff) + 0x100 + (((fp + DST_CODE) & 0x3f) << 2); //converted to 32bits offset
 
 	m_local_regs[(reg + 0) & 0x3f] = stack_of_dst;
 	m_local_regs[(reg + 1) & 0x3f] = sreg;
 	m_local_regs[(reg + 2) & 0x3f] = sregf;
 	m_local_regs[(reg + 3) & 0x3f] = (PC & ~1) | GET_S;
-	m_local_regs[(reg + 4) & 0x3f] = oldSR;
+	m_local_regs[(reg + 4) & 0x3f] = SR;
+
+	SET_FL(6);
+	SET_FP(reg);
 
 	SR &= ~(M_MASK | T_MASK);
 	SR |= L_MASK;
@@ -1047,8 +1035,10 @@ void hyperstone_device::init(int scale_mask)
 	m_clck_scale = 0;
 	m_clock_cycles_1 = 0;
 	m_clock_cycles_2 = 0;
+	m_clock_cycles_3 = 0;
 	m_clock_cycles_4 = 0;
 	m_clock_cycles_6 = 0;
+	m_clock_cycles_36 = 0;
 
 	m_tr_base_cycles = 0;
 	m_tr_base_value = 0;
@@ -1237,8 +1227,10 @@ void hyperstone_device::init(int scale_mask)
 	save_item(NAME(m_clock_scale_mask));
 	save_item(NAME(m_clock_cycles_1));
 	save_item(NAME(m_clock_cycles_2));
+	save_item(NAME(m_clock_cycles_3));
 	save_item(NAME(m_clock_cycles_4));
 	save_item(NAME(m_clock_cycles_6));
+	save_item(NAME(m_clock_cycles_36));
 
 	// set our instruction counter
 	m_icountptr = &m_icount;
@@ -1449,6 +1441,8 @@ bool hyperstone_device::get_h() const
 
 void hyperstone_device::hyperstone_trap()
 {
+	m_icount -= m_clock_cycles_1;
+
 	static const uint32_t conditions[16] = {
 		0, 0, 0, 0, N_MASK | Z_MASK, N_MASK | Z_MASK, N_MASK, N_MASK, C_MASK | Z_MASK, C_MASK | Z_MASK, C_MASK, C_MASK, Z_MASK, Z_MASK, V_MASK, 0
 	};
@@ -1472,8 +1466,6 @@ void hyperstone_device::hyperstone_trap()
 		if (!(SR & conditions[code]))
 			execute_trap(addr);
 	}
-
-	m_icount -= m_clock_cycles_1;
 }
 
 
@@ -1554,8 +1546,6 @@ void hyperstone_device::execute_run()
 
 	do
 	{
-		uint32_t oldh = SR & 0x00000020;
-
 #if E132XS_LOG_INTERPRETER_REGS
 		dump_registers();
 #endif
@@ -1826,9 +1816,6 @@ void hyperstone_device::execute_run()
 			case 0xfe: hyperstone_trap(); break;
 			case 0xff: hyperstone_trap(); break;
 		}
-
-		/* clear the H state if it was previously set */
-		SR ^= oldh;
 
 		SET_ILC(m_instruction_length);
 

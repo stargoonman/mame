@@ -25,6 +25,16 @@
 #define S_BIT_CONST(val) ((val & 0x4000) >> 14)
 #define DD(val)          ((val & 0x3000) >> 12)
 
+#define S_BIT                   ((OP & 0x100) >> 8)
+#define D_BIT                   ((OP & 0x200) >> 9)
+#define N_VALUE                 (((OP & 0x100) >> 4) | (OP & 0x0f))
+#define HI_N_VALUE              (0x10 | (OP & 0x0f))
+#define LO_N_VALUE              (OP & 0x0f)
+#define N_OP_MASK               (m_op & 0x10f)
+#define DST_CODE                ((OP & 0xf0) >> 4)
+#define SRC_CODE                (OP & 0x0f)
+#define SIGN_BIT(val)           ((val & 0x80000000) >> 31)
+#define SIGN_TO_N(val)          ((val & 0x80000000) >> 29)
 
 /* Extended DSP instructions */
 #define EMUL            0x102

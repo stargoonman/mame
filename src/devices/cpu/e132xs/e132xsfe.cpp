@@ -14,9 +14,9 @@
 
 #define FE_FP ((m_cpu->m_global_regs[1] & 0xfe000000) >> 25)
 #define FE_FL (m_cpu->m_fl_lut[((m_cpu->m_global_regs[1] >> 21) & 0xf)])
-#define DST_CODE                ((op & 0xf0) >> 4)
-#define SRC_CODE                (op & 0x0f)
-#define SR_CODE                 (1 << 1)
+#define FE_DST_CODE	((op & 0xf0) >> 4)
+#define FE_SRC_CODE	(op & 0x0f)
+#define SR_CODE		(1 << 1)
 
 /***************************************************************************
     INSTRUCTION PARSERS
@@ -168,21 +168,21 @@ bool e132xs_frontend::describe(opcode_desc &desc, const opcode_desc *prev)
 
 	/* most instructions are 2 bytes and a single cycle */
 	desc.length = 2;
-	desc.cycles = m_cpu->m_clock_cycles_1;
+	desc.delayslots = 0;
 
 	const uint32_t fp = FE_FP;
-	const uint32_t gdst_code = DST_CODE;
+	const uint32_t gdst_code = FE_DST_CODE;
 	const uint32_t gdstf_code = gdst_code + 1;
-	const uint32_t gsrc_code = SRC_CODE;
+	const uint32_t gsrc_code = FE_SRC_CODE;
 	const uint32_t gsrcf_code = gsrc_code + 1;
 	const uint32_t ldst_code = (gdst_code + fp) & 0x1f;
 	const uint32_t ldstf_code = (gdstf_code + fp) & 0x1f;
 	const uint32_t lsrc_code = (gsrc_code + fp) & 0x1f;
 	const uint32_t lsrcf_code = (gsrcf_code + fp) & 0x1f;
-	const uint32_t ldst_group = 1 + (((DST_CODE + fp) & 0x20) >> 5);
-	const uint32_t ldstf_group = 1 + (((DST_CODE + fp + 1) & 0x20) >> 5);
-	const uint32_t lsrc_group = 1 + (((SRC_CODE + fp) & 0x20) >> 5);
-	const uint32_t lsrcf_group = 1 + ((SRC_CODE + fp + 1) >> 5);
+	const uint32_t ldst_group = 1 + (((FE_DST_CODE + fp) & 0x20) >> 5);
+	const uint32_t ldstf_group = 1 + (((FE_DST_CODE + fp + 1) & 0x20) >> 5);
+	const uint32_t lsrc_group = 1 + (((FE_SRC_CODE + fp) & 0x20) >> 5);
+	const uint32_t lsrcf_group = 1 + ((FE_SRC_CODE + fp + 1) >> 5);
 
 	switch (op >> 8)
 	{
@@ -221,10 +221,6 @@ bool e132xs_frontend::describe(opcode_desc &desc, const opcode_desc *prev)
 				desc.targetpc = BRANCH_TARGET_DYNAMIC;
 				desc.flags |= OPFLAG_IS_UNCONDITIONAL_BRANCH | OPFLAG_END_SEQUENCE | OPFLAG_CAN_CAUSE_EXCEPTION;
 			}
-			else
-			{
-				desc.cycles = m_cpu->m_clock_cycles_2;
-			}
 			desc.regout[0] |= SR_CODE;
 			break;
 		case 0x05: // movd global,local
@@ -240,10 +236,6 @@ bool e132xs_frontend::describe(opcode_desc &desc, const opcode_desc *prev)
 				desc.targetpc = BRANCH_TARGET_DYNAMIC;
 				desc.flags |= OPFLAG_IS_UNCONDITIONAL_BRANCH | OPFLAG_END_SEQUENCE | OPFLAG_CAN_CAUSE_EXCEPTION;
 			}
-			else
-			{
-				desc.cycles = m_cpu->m_clock_cycles_2;
-			}
 			desc.regout[0] |= SR_CODE;
 			break;
 		case 0x06: // movd local,global
@@ -253,7 +245,6 @@ bool e132xs_frontend::describe(opcode_desc &desc, const opcode_desc *prev)
 			desc.regout[ldst_group] |= 1 << ldst_code;
 			desc.regout[ldstf_group] |= 1 << ldstf_code;
 			desc.regout[0] |= SR_CODE;
-			desc.cycles = m_cpu->m_clock_cycles_2;
 			break;
 		case 0x07: // movd local,local
 			desc.regin[0] |= SR_CODE;
@@ -262,7 +253,6 @@ bool e132xs_frontend::describe(opcode_desc &desc, const opcode_desc *prev)
 			desc.regout[ldst_group] |= 1 << ldst_code;
 			desc.regout[ldstf_group] |= 1 << ldstf_code;
 			desc.regout[0] |= SR_CODE;
-			desc.cycles = m_cpu->m_clock_cycles_2;
 			break;
 		case 0x08: // divu global,global
 		case 0x0c: // divs global,global
@@ -273,7 +263,6 @@ bool e132xs_frontend::describe(opcode_desc &desc, const opcode_desc *prev)
 			desc.regout[0] |= 1 << gdst_code;
 			desc.regout[0] |= 1 << gdstf_code;
 			desc.regout[0] |= SR_CODE;
-			desc.cycles = 36 << m_cpu->m_clck_scale;
 			break;
 		case 0x09: // divu global,local
 		case 0x0d: // divs global,local
@@ -285,7 +274,6 @@ bool e132xs_frontend::describe(opcode_desc &desc, const opcode_desc *prev)
 			desc.regout[0] |= 1 << gdst_code;
 			desc.regout[0] |= 1 << gdstf_code;
 			desc.regout[0] |= SR_CODE;
-			desc.cycles = 36 << m_cpu->m_clck_scale;
 			break;
 		case 0x0a: // divu local,global
 		case 0x0e: // divs local,global
@@ -297,7 +285,6 @@ bool e132xs_frontend::describe(opcode_desc &desc, const opcode_desc *prev)
 			desc.regout[ldst_group] |= 1 << ldst_code;
 			desc.regout[ldstf_group] |= 1 << ldstf_code;
 			desc.regout[0] |= SR_CODE;
-			desc.cycles = 36 << m_cpu->m_clck_scale;
 			break;
 		case 0x0b: // divu local,local
 		case 0x0f: // divs local,local
@@ -309,7 +296,6 @@ bool e132xs_frontend::describe(opcode_desc &desc, const opcode_desc *prev)
 			desc.regout[ldst_group] |= 1 << ldst_code;
 			desc.regout[ldstf_group] |= 1 << ldstf_code;
 			desc.regout[0] |= SR_CODE;
-			desc.cycles = 36 << m_cpu->m_clck_scale;
 			break;
 		case 0x10: // xm global,global
 			desc.flags |= OPFLAG_CAN_CAUSE_EXCEPTION;
@@ -434,6 +420,15 @@ bool e132xs_frontend::describe(opcode_desc &desc, const opcode_desc *prev)
 			desc.regout[0] |= 1 << gdst_code;
 			desc.regout[0] |= SR_CODE;
 			desc.flags |= OPFLAG_CAN_CAUSE_EXCEPTION;
+			if (gdst_code == PC_REGISTER)
+			{
+				desc.targetpc = BRANCH_TARGET_DYNAMIC;
+				desc.flags |= OPFLAG_IS_UNCONDITIONAL_BRANCH | OPFLAG_END_SEQUENCE;
+			}
+			else if (gdst_code == 5) // TPR_REGISTER & 0xf
+			{
+				desc.flags |= OPFLAG_END_SEQUENCE;
+			}
 			break;
 		case 0x25: // mov global,local
 			desc.regin[0] |= SR_CODE;
@@ -441,6 +436,15 @@ bool e132xs_frontend::describe(opcode_desc &desc, const opcode_desc *prev)
 			desc.regout[0] |= 1 << gdst_code;
 			desc.regout[0] |= SR_CODE;
 			desc.flags |= OPFLAG_CAN_CAUSE_EXCEPTION;
+			if (gdst_code == PC_REGISTER)
+			{
+				desc.targetpc = BRANCH_TARGET_DYNAMIC;
+				desc.flags |= OPFLAG_IS_UNCONDITIONAL_BRANCH | OPFLAG_END_SEQUENCE;
+			}
+			else if (gdst_code == 5) // TPR_REGISTER & 0xf
+			{
+				desc.flags |= OPFLAG_END_SEQUENCE;
+			}
 			break;
 		case 0x26: // mov local,global
 			desc.regin[0] |= SR_CODE;
@@ -708,6 +712,10 @@ bool e132xs_frontend::describe(opcode_desc &desc, const opcode_desc *prev)
 				desc.targetpc = op & 0xf;
 				desc.flags |= OPFLAG_IS_UNCONDITIONAL_BRANCH | OPFLAG_END_SEQUENCE;
 			}
+			else if (gdst_code == 5) // TPR_REGISTER & 0xf
+			{
+				desc.flags |= OPFLAG_END_SEQUENCE;
+			}
 			break;
 		case 0x65: // movi global,limm
 			desc.regin[0] |= SR_CODE;
@@ -720,6 +728,10 @@ bool e132xs_frontend::describe(opcode_desc &desc, const opcode_desc *prev)
 			{
 				desc.targetpc = read_limm(desc, op);
 				desc.flags |= OPFLAG_IS_UNCONDITIONAL_BRANCH | OPFLAG_END_SEQUENCE;
+			}
+			else if (gdst_code == 5) // TPR_REGISTER & 0xf
+			{
+				desc.flags |= OPFLAG_END_SEQUENCE;
 			}
 			break;
 		case 0x66: // movi local,simm
@@ -828,7 +840,6 @@ bool e132xs_frontend::describe(opcode_desc &desc, const opcode_desc *prev)
 			desc.regout[ldst_group] |= 1 << ldst_code;
 			desc.regout[ldstf_group] |= 1 << ldstf_code;
 			desc.regout[0] |= SR_CODE;
-			desc.cycles = m_cpu->m_clock_cycles_2;
 			break;
 		case 0x82: // shrd
 		case 0x86: // sard
@@ -838,7 +849,6 @@ bool e132xs_frontend::describe(opcode_desc &desc, const opcode_desc *prev)
 			desc.regout[ldst_group] |= 1 << ldst_code;
 			desc.regout[ldstf_group] |= 1 << ldstf_code;
 			desc.regout[0] |= SR_CODE;
-			desc.cycles = m_cpu->m_clock_cycles_2;
 			break;
 		case 0x83: // shr
 		case 0x87: // sar
@@ -1134,7 +1144,6 @@ bool e132xs_frontend::describe(opcode_desc &desc, const opcode_desc *prev)
 			desc.regout[0] |= 1 << gdst_code;
 			desc.regout[0] |= 1 << gdstf_code;
 			desc.regout[0] |= SR_CODE;
-			desc.cycles = m_cpu->m_clock_cycles_4;
 			break;
 		case 0xb1: // mulu global,local
 		case 0xb5: // muls global,local
@@ -1143,7 +1152,6 @@ bool e132xs_frontend::describe(opcode_desc &desc, const opcode_desc *prev)
 			desc.regout[0] |= 1 << gdst_code;
 			desc.regout[0] |= 1 << gdstf_code;
 			desc.regout[0] |= SR_CODE;
-			desc.cycles = m_cpu->m_clock_cycles_4;
 			break;
 		case 0xb2: // mulu local,global
 		case 0xb6: // muls local,global
@@ -1152,7 +1160,6 @@ bool e132xs_frontend::describe(opcode_desc &desc, const opcode_desc *prev)
 			desc.regout[ldst_group] |= 1 << ldst_code;
 			desc.regout[ldstf_group] |= 1 << ldstf_code;
 			desc.regout[0] |= SR_CODE;
-			desc.cycles = m_cpu->m_clock_cycles_4;
 			break;
 		case 0xb3: // mulu local,local
 		case 0xb7: // muls local,local
@@ -1161,7 +1168,6 @@ bool e132xs_frontend::describe(opcode_desc &desc, const opcode_desc *prev)
 			desc.regout[ldst_group] |= 1 << ldst_code;
 			desc.regout[ldstf_group] |= 1 << ldstf_code;
 			desc.regout[0] |= SR_CODE;
-			desc.cycles = m_cpu->m_clock_cycles_4;
 			break;
 		case 0xb8: // set global (lo n)
 		case 0xb9: // set global (hi n)
@@ -1177,28 +1183,24 @@ bool e132xs_frontend::describe(opcode_desc &desc, const opcode_desc *prev)
 			desc.regin[0] |= 1 << gdst_code;
 			desc.regout[0] |= 1 << gdst_code;
 			desc.regout[0] |= SR_CODE;
-			desc.cycles = 3 << m_cpu->m_clck_scale;
 			break;
 		case 0xbd: // muls global,local
 			desc.regin[lsrc_group] |= 1 << lsrc_code;
 			desc.regin[0] |= 1 << gdst_code;
 			desc.regout[0] |= 1 << gdst_code;
 			desc.regout[0] |= SR_CODE;
-			desc.cycles = 3 << m_cpu->m_clck_scale;
 			break;
 		case 0xbe: // muls local,global
 			desc.regin[0] |= 1 << gsrc_code;
 			desc.regin[ldst_group] |= 1 << ldst_code;
 			desc.regout[ldst_group] |= 1 << ldst_code;
 			desc.regout[0] |= SR_CODE;
-			desc.cycles = 3 << m_cpu->m_clck_scale;
 			break;
 		case 0xbf: // mulu local,local
 			desc.regin[lsrc_group] |= 1 << lsrc_code;
 			desc.regin[ldst_group] |= 1 << ldst_code;
 			desc.regout[ldst_group] |= 1 << ldst_code;
 			desc.regout[0] |= SR_CODE;
-			desc.cycles = 3 << m_cpu->m_clck_scale;
 			break;
 		case 0xc0: case 0xc1: case 0xc2: case 0xc3: // software
 		case 0xc4: case 0xc5: case 0xc6: case 0xc7: // software
@@ -1218,6 +1220,7 @@ bool e132xs_frontend::describe(opcode_desc &desc, const opcode_desc *prev)
 
 			desc.regout[0] |= SR_CODE;
 
+			desc.targetpc = BRANCH_TARGET_DYNAMIC;
 			desc.flags |= OPFLAG_IS_UNCONDITIONAL_BRANCH | OPFLAG_END_SEQUENCE;
 			break;
 		}
@@ -1304,7 +1307,7 @@ bool e132xs_frontend::describe(opcode_desc &desc, const opcode_desc *prev)
 			decode_pcrel(desc, op);
 			desc.regin[0] |= SR_CODE;
 			desc.targetpc = BRANCH_TARGET_DYNAMIC;
-			desc.flags |= OPFLAG_IS_CONDITIONAL_BRANCH;
+			desc.flags |= OPFLAG_IS_CONDITIONAL_BRANCH | OPFLAG_END_SEQUENCE;
 			desc.delayslots = 1;
 			break;
 		case 0xec: // dbr - could be 4 bytes (pcrel)

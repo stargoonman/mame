@@ -63,7 +63,7 @@ inline void hyperstone_device::ccfunc_unimplemented()
 
 inline void hyperstone_device::ccfunc_print()
 {
-	printf("%c: %08X\n", (char)m_drc_arg0, m_drc_arg1);
+	printf("%c: %08x\n", (char)m_drc_arg0, m_drc_arg1);
 }
 
 static void cfunc_unimplemented(void *param)
@@ -270,20 +270,14 @@ void hyperstone_device::code_compile_block(offs_t pc)
 				for (curdesc = seqhead; curdesc != seqlast->next(); curdesc = curdesc->next())
 				{
 					generate_sequence_instruction(block, &compiler, curdesc);
+					uint32_t curnext = curdesc->pc + curdesc->length;
+					generate_update_cycles(block, &compiler, curnext);
 				}
 
-				/* if we need to return to the start, do it */
-				if (seqlast->flags & OPFLAG_RETURN_TO_START)
+				if (seqlast->flags & OPFLAG_RETURN_TO_START) /* if we need to return to the start, do it */
 					nextpc = pc;
-
-				/* otherwise we just go to the next instruction */
-				else
-				{
+				else /* otherwise we just go to the next instruction */
 					nextpc = seqlast->pc + seqlast->length;
-				}
-
-				/* count off cycles and go there */
-				generate_update_cycles(block, &compiler, nextpc);            // <subtract cycles>
 
 				/* if the last instruction can change modes, use a variable mode; otherwise, assume the same mode */
 				if (seqlast->next() == nullptr || seqlast->next()->pc != nextpc)
@@ -373,7 +367,7 @@ void hyperstone_device::static_generate_exception(uint32_t exception, const char
 
 	UML_MOV(block, DRC_PC, I0);
 	UML_SUB(block, mem(&m_icount), mem(&m_icount), 2);
-	UML_EXHc(block, COND_S, *m_out_of_cycles, 0);
+	UML_EXHc(block, uml::COND_S, *m_out_of_cycles, 0);
 
 	UML_HASHJMP(block, 0, I0, *m_nocode);// hashjmp <mode>,i0,nocode
 
@@ -452,8 +446,8 @@ void hyperstone_device::static_generate_out_of_cycles()
 	/* generate a hash jump via the current mode and PC */
 	alloc_handle(drcuml, &m_out_of_cycles, "out_of_cycles");
 	UML_HANDLE(block, *m_out_of_cycles);
-	UML_GETEXP(block, I0);
-	UML_MOV(block, mem(&m_global_regs[0]), I0);
+	//UML_GETEXP(block, I0);
+	//UML_MOV(block, mem(&m_global_regs[0]), I0);
 	//save_fast_iregs(block);
 	UML_EXIT(block, EXECUTE_OUT_OF_CYCLES);
 
@@ -522,14 +516,10 @@ void hyperstone_device::static_generate_memory_accessor(int size, int iswrite, b
 
 void hyperstone_device::generate_update_cycles(drcuml_block *block, compiler_state *compiler, uml::parameter param)
 {
-	/* account for cycles */
-	if (compiler->m_cycles > 0)
-	{
-		UML_SUB(block, mem(&m_icount), mem(&m_icount), MAPVAR_CYCLES);
-		UML_MAPVAR(block, MAPVAR_CYCLES, 0);
-		UML_EXHc(block, COND_S, *m_out_of_cycles, param);
-	}
-	compiler->m_cycles = 0;
+	UML_SUB(block, mem(&m_icount), mem(&m_icount), I7);
+	UML_EXHc(block, uml::COND_S, *m_out_of_cycles, param);
+	UML_EXHc(block, uml::COND_Z, *m_out_of_cycles, param);
+	UML_MOV(block, I7, 0);
 }
 
 /*-------------------------------------------------
@@ -626,15 +616,15 @@ void hyperstone_device::generate_delay_slot_and_branch(drcuml_block *block, comp
 
 	/* fetch the target register if dynamic, in case it is modified by the delay slot */
 	if (desc->targetpc == BRANCH_TARGET_DYNAMIC)
-	{
 		UML_MOV(block, mem(&m_branch_dest), DRC_PC);
-	}
 
 	if (desc->delayslots)
 	{
 		/* compile the delay slot using temporary compiler state */
 		assert(desc->delay.first() != nullptr);
+		generate_update_cycles(block, &compiler_temp, desc->delay.first()->pc);
 		generate_sequence_instruction(block, &compiler_temp, desc->delay.first());       // <next instruction>
+		generate_delay_slot_and_branch(block, &compiler_temp, desc->delay.last());
 		UML_MOV(block, mem(&m_branch_dest), DRC_PC);
 	}
 
@@ -655,9 +645,6 @@ void hyperstone_device::generate_delay_slot_and_branch(drcuml_block *block, comp
 
 	/* update the label */
 	compiler->m_labelnum = compiler_temp.m_labelnum;
-
-	/* reset the mapvar to the current cycles */
-	UML_MAPVAR(block, MAPVAR_CYCLES, compiler->m_cycles);
 }
 
 
@@ -678,12 +665,6 @@ void hyperstone_device::generate_sequence_instruction(drcuml_block *block, compi
 	expc = (desc->flags & OPFLAG_IN_DELAY_SLOT) ? desc->pc - 3 : desc->pc;
 	UML_MAPVAR(block, MAPVAR_PC, expc);
 
-	/* accumulate total cycles */
-	compiler->m_cycles += desc->cycles;
-
-	/* update the icount map variable */
-	UML_MAPVAR(block, MAPVAR_CYCLES, compiler->m_cycles);
-
 #if E132XS_LOG_DRC_REGS
 	UML_CALLC(block, cfunc_dump_registers, this);
 #endif
@@ -691,7 +672,6 @@ void hyperstone_device::generate_sequence_instruction(drcuml_block *block, compi
 	/* if we are debugging, call the debugger */
 	if ((machine().debug_flags & DEBUG_FLAG_ENABLED) != 0)
 	{
-		UML_MOV(block, DRC_PC, desc->pc);
 		//save_fast_iregs(block);
 		UML_DEBUG(block, desc->pc);
 	}
@@ -717,7 +697,6 @@ bool hyperstone_device::generate_opcode(drcuml_block *block, compiler_state *com
 	uint32_t op = (uint32_t)desc->opptr.w[0];
 
 	UML_MOV(block, I0, op);
-	UML_AND(block, I7, DRC_SR, H_MASK);
 	UML_ADD(block, DRC_PC, DRC_PC, 2);
 
 	switch (op >> 8)
@@ -988,7 +967,6 @@ bool hyperstone_device::generate_opcode(drcuml_block *block, compiler_state *com
 	UML_EXHc(block, uml::COND_E, *m_exception[EXCEPTION_TRACE], 0);
 
 	UML_LABEL(block, done);
-	UML_XOR(block, DRC_SR, DRC_SR, I7);
 
 	return true;
 }
