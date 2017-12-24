@@ -52,8 +52,8 @@
 
 #define ENABLE_E132XS_DRC				(1)
 
-#define E132XS_LOG_DRC_REGS				(1)
-#define E132XS_LOG_INTERPRETER_REGS		(1)
+#define E132XS_LOG_DRC_REGS				(0)
+#define E132XS_LOG_INTERPRETER_REGS		(0)
 
 //**************************************************************************
 //  TYPE DEFINITIONS
@@ -176,6 +176,18 @@ protected:
 		IS_SET = 1
 	};
 
+	enum trap_or_int
+	{
+		IS_TRAP = 0,
+		IS_INT = 1
+	};
+
+	enum is_timer
+	{
+		NO_TIMER = 0,
+		IS_TIMER = 1
+	};
+
 	enum
 	{
 		EXCEPTION_IO2                  = 48,
@@ -256,7 +268,7 @@ protected:
 	uint32_t  m_tr_base_value;
 	uint32_t  m_tr_result;
 	uint32_t  m_tr_clocks_per_tick;
-	uint8_t   m_timer_int_pending;
+	uint32_t  m_timer_int_pending;
 	emu_timer *m_timer;
 
 	uint64_t m_numcycles;
@@ -281,7 +293,7 @@ protected:
 
 private:
 	// internal functions
-	void check_interrupts();
+	template <hyperstone_device::is_timer TIMER> void check_interrupts();
 
 	void set_global_register(uint8_t code, uint32_t val);
 	void set_local_register(uint8_t code, uint32_t val);
@@ -396,6 +408,7 @@ private:
 
 	uml::code_handle *m_entry;
 	uml::code_handle *m_nocode;
+	uml::code_handle *m_interrupt_checks;
 	uml::code_handle *m_out_of_cycles;
 
 	uint32_t m_drc_arg0;
@@ -435,8 +448,12 @@ private:
 	void static_generate_out_of_cycles();
 	void static_generate_exception(uint32_t exception, const char *name);
 	void static_generate_memory_accessor(int size, int iswrite, bool isio, const char *name, uml::code_handle *&handleptr);
+	void static_generate_interrupt_checks();
+	void generate_interrupt_checks_no_timer(drcuml_block *block, uml::code_label &labelnum);
+	void generate_interrupt_checks_with_timer(drcuml_block *block, uml::code_label &labelnum);
 	void generate_delay_slot_and_branch(drcuml_block *block, compiler_state *compiler, const opcode_desc *desc);
-	void generate_update_cycles(drcuml_block *block, compiler_state *compiler, uml::parameter param);
+	void generate_branch(drcuml_block *block, uml::parameter targetpc, bool update_cycles = true);
+	void generate_update_cycles(drcuml_block *block);
 	void generate_checksum_block(drcuml_block *block, compiler_state *compiler, const opcode_desc *seqhead, const opcode_desc *seqlast);
 	void generate_sequence_instruction(drcuml_block *block, compiler_state *compiler, const opcode_desc *desc);
 	void log_add_disasm_comment(drcuml_block *block, uint32_t pc, uint32_t op);
@@ -453,7 +470,7 @@ private:
 	void generate_get_global_register(drcuml_block *block, compiler_state *compiler, const opcode_desc *desc);
 	void generate_set_global_register(drcuml_block *block, compiler_state *compiler, const opcode_desc *desc);
 
-	void generate_trap(drcuml_block *block, compiler_state *compiler, const opcode_desc *desc);
+	template <trap_or_int IS_INT> void generate_trap_or_int(drcuml_block *block);
 	void generate_int(drcuml_block *block, compiler_state *compiler, const opcode_desc *desc, uint32_t addr);
 	void generate_exception(drcuml_block *block, compiler_state *compiler, const opcode_desc *desc, uint32_t addr);
 	void generate_software(drcuml_block *block, compiler_state *compiler, const opcode_desc *desc);

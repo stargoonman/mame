@@ -1224,7 +1224,7 @@ void hyperstone_device::hyperstone_shrd()
 
 	if (val == 0)
 		SR |= Z_MASK;
-	SR |= SIGN_TO_N(val);
+	SR |= SIGN64_TO_N(val);
 
 	m_local_regs[dst_code] = (uint32_t)(val >> 32);
 	m_local_regs[dstf_code] = (uint32_t)val;
@@ -1312,6 +1312,7 @@ void hyperstone_device::hyperstone_sard()
 	SR &= ~(C_MASK | Z_MASK | N_MASK);
 
 	const uint32_t n = m_local_regs[src_code] & 0x1f;
+
 	if (n)
 	{
 		SR |= (val >> (n - 1)) & 1;
@@ -1328,7 +1329,7 @@ void hyperstone_device::hyperstone_sard()
 
 	if (val == 0)
 		SR |= Z_MASK;
-	SR |= SIGN_TO_N(m_local_regs[dst_code]);
+	SR |= SIGN64_TO_N(val);
 
 	m_local_regs[dst_code] = (uint32_t)(val >> 32);
 	m_local_regs[dstf_code] = (uint32_t)val;
@@ -1445,7 +1446,7 @@ void hyperstone_device::hyperstone_shld()
 
 	if (val == 0)
 		SR |= Z_MASK;
-	SR |= (val >> 61) & N_MASK;
+	SR |= SIGN64_TO_N(val);
 
 	m_local_regs[dst_code] = extract_64hi(val);
 	m_local_regs[dstf_code] = extract_64lo(val);

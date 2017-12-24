@@ -35,6 +35,7 @@
 #define SRC_CODE                (OP & 0x0f)
 #define SIGN_BIT(val)           ((val & 0x80000000) >> 31)
 #define SIGN_TO_N(val)          ((val & 0x80000000) >> 29)
+#define SIGN64_TO_N(val)        ((val & 0x8000000000000000ULL) >> 61)
 
 /* Extended DSP instructions */
 #define EMUL            0x102

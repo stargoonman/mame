@@ -900,14 +900,15 @@ void hyperstone_device::execute_software()
         7 - TIMER   (trap 55)
 */
 
-#define INT1_LINE_STATE     ((ISR >> 0) & 1)
-#define INT2_LINE_STATE     ((ISR >> 1) & 1)
-#define INT3_LINE_STATE     ((ISR >> 2) & 1)
-#define INT4_LINE_STATE     ((ISR >> 3) & 1)
-#define IO1_LINE_STATE      ((ISR >> 4) & 1)
-#define IO2_LINE_STATE      ((ISR >> 5) & 1)
-#define IO3_LINE_STATE      ((ISR >> 6) & 1)
+#define INT1_LINE_STATE     (ISR & 0x01)
+#define INT2_LINE_STATE     (ISR & 0x02)
+#define INT3_LINE_STATE     (ISR & 0x04)
+#define INT4_LINE_STATE     (ISR & 0x08)
+#define IO1_LINE_STATE      (ISR & 0x10)
+#define IO2_LINE_STATE      (ISR & 0x20)
+#define IO3_LINE_STATE      (ISR & 0x40)
 
+template <hyperstone_device::is_timer TIMER>
 void hyperstone_device::check_interrupts()
 {
 	/* Interrupt-Lock flag isn't set */
@@ -915,95 +916,174 @@ void hyperstone_device::check_interrupts()
 		return;
 
 	/* quick exit if nothing */
-	if (!m_timer_int_pending && (ISR & 0x7f) == 0)
+	if (TIMER == NO_TIMER && (ISR & 0x7f) == 0)
 		return;
 
-	/* IO3 is priority 5; state is in bit 6 of ISR; FCR bit 10 enables input and FCR bit 8 inhibits interrupt */
-	if (IO3_LINE_STATE && (FCR & 0x00000500) == 0x00000400)
+	if (TIMER == NO_TIMER)
 	{
-		execute_int(get_trap_addr(TRAPNO_IO3));
-		standard_irq_callback(IRQ_IO3);
-		return;
+		/* IO3 is priority 5; state is in bit 6 of ISR; FCR bit 10 enables input and FCR bit 8 inhibits interrupt */
+		if (IO3_LINE_STATE && (FCR & 0x00000500) == 0x00000400)
+		{
+			printf("io3\n");
+			execute_int(get_trap_addr(TRAPNO_IO3));
+			standard_irq_callback(IRQ_IO3);
+			return;
+		}
+
+		/* INT1 is priority 7; state is in bit 0 of ISR; FCR bit 28 inhibits interrupt */
+		if (INT1_LINE_STATE && (FCR & 0x10000000) == 0x00000000)
+		{
+			printf("int1\n");
+			execute_int(get_trap_addr(TRAPNO_INT1));
+			standard_irq_callback(IRQ_INT1);
+			return;
+		}
+
+		/* INT2 is priority 9; state is in bit 1 of ISR; FCR bit 29 inhibits interrupt */
+		if (INT2_LINE_STATE && (FCR & 0x20000000) == 0x00000000)
+		{
+			printf("int2\n");
+			execute_int(get_trap_addr(TRAPNO_INT2));
+			standard_irq_callback(IRQ_INT2);
+			return;
+		}
+
+		/* INT3 is priority 11; state is in bit 2 of ISR; FCR bit 30 inhibits interrupt */
+		if (INT3_LINE_STATE && (FCR & 0x40000000) == 0x00000000)
+		{
+			printf("int3\n");
+			execute_int(get_trap_addr(TRAPNO_INT3));
+			standard_irq_callback(IRQ_INT3);
+			return;
+		}
+
+		/* INT4 is priority 13; state is in bit 3 of ISR; FCR bit 31 inhibits interrupt */
+		if (INT4_LINE_STATE && (FCR & 0x80000000) == 0x00000000)
+		{
+			printf("int4\n");
+			execute_int(get_trap_addr(TRAPNO_INT4));
+			standard_irq_callback(IRQ_INT4);
+			return;
+		}
+
+		/* IO1 is priority 14; state is in bit 4 of ISR; FCR bit 2 enables input and FCR bit 0 inhibits interrupt */
+		if (IO1_LINE_STATE && (FCR & 0x00000005) == 0x00000004)
+		{
+			printf("io1\n");
+			execute_int(get_trap_addr(TRAPNO_IO1));
+			standard_irq_callback(IRQ_IO1);
+			return;
+		}
+
+		/* IO2 is priority 15; state is in bit 5 of ISR; FCR bit 6 enables input and FCR bit 4 inhibits interrupt */
+		if (IO2_LINE_STATE && (FCR & 0x00000050) == 0x00000040)
+		{
+			printf("io2\n");
+			execute_int(get_trap_addr(TRAPNO_IO2));
+			standard_irq_callback(IRQ_IO2);
+			return;
+		}
 	}
-
-	/* timer int might be priority 6 if FCR bits 20-21 == 3; FCR bit 23 inhibits interrupt */
-	if (m_timer_int_pending && (FCR & 0x00b00000) == 0x00300000)
+	else
 	{
-		m_timer_int_pending = 0;
-		execute_int(get_trap_addr(TRAPNO_TIMER));
-		return;
-	}
+		/* IO3 is priority 5; state is in bit 6 of ISR; FCR bit 10 enables input and FCR bit 8 inhibits interrupt */
+		if (IO3_LINE_STATE && (FCR & 0x00000500) == 0x00000400)
+		{
+			printf("io3\n");
+			execute_int(get_trap_addr(TRAPNO_IO3));
+			standard_irq_callback(IRQ_IO3);
+			return;
+		}
 
-	/* INT1 is priority 7; state is in bit 0 of ISR; FCR bit 28 inhibits interrupt */
-	if (INT1_LINE_STATE && (FCR & 0x10000000) == 0x00000000)
-	{
-		execute_int(get_trap_addr(TRAPNO_INT1));
-		standard_irq_callback(IRQ_INT1);
-		return;
-	}
+		/* timer int might be priority 6 if FCR bits 20-21 == 3; FCR bit 23 inhibits interrupt */
+		if (TIMER && (FCR & 0x00b00000) == 0x00300000)
+		{
+			printf("timer6\n");
+			m_timer_int_pending = 0;
+			execute_int(get_trap_addr(TRAPNO_TIMER));
+			return;
+		}
 
-	/* timer int might be priority 8 if FCR bits 20-21 == 2; FCR bit 23 inhibits interrupt */
-	if (m_timer_int_pending && (FCR & 0x00b00000) == 0x00200000)
-	{
-		m_timer_int_pending = 0;
-		execute_int(get_trap_addr(TRAPNO_TIMER));
-		return;
-	}
+		/* INT1 is priority 7; state is in bit 0 of ISR; FCR bit 28 inhibits interrupt */
+		if (INT1_LINE_STATE && (FCR & 0x10000000) == 0x00000000)
+		{
+			printf("int1\n");
+			execute_int(get_trap_addr(TRAPNO_INT1));
+			standard_irq_callback(IRQ_INT1);
+			return;
+		}
 
-	/* INT2 is priority 9; state is in bit 1 of ISR; FCR bit 29 inhibits interrupt */
-	if (INT2_LINE_STATE && (FCR & 0x20000000) == 0x00000000)
-	{
-		execute_int(get_trap_addr(TRAPNO_INT2));
-		standard_irq_callback(IRQ_INT2);
-		return;
-	}
+		/* timer int might be priority 8 if FCR bits 20-21 == 2; FCR bit 23 inhibits interrupt */
+		if (TIMER && (FCR & 0x00b00000) == 0x00200000)
+		{
+			printf("timer8\n");
+			m_timer_int_pending = 0;
+			execute_int(get_trap_addr(TRAPNO_TIMER));
+			return;
+		}
 
-	/* timer int might be priority 10 if FCR bits 20-21 == 1; FCR bit 23 inhibits interrupt */
-	if (m_timer_int_pending && (FCR & 0x00b00000) == 0x00100000)
-	{
-		m_timer_int_pending = 0;
-		execute_int(get_trap_addr(TRAPNO_TIMER));
-		return;
-	}
+		/* INT2 is priority 9; state is in bit 1 of ISR; FCR bit 29 inhibits interrupt */
+		if (INT2_LINE_STATE && (FCR & 0x20000000) == 0x00000000)
+		{
+			printf("int2\n");
+			execute_int(get_trap_addr(TRAPNO_INT2));
+			standard_irq_callback(IRQ_INT2);
+			return;
+		}
 
-	/* INT3 is priority 11; state is in bit 2 of ISR; FCR bit 30 inhibits interrupt */
-	if (INT3_LINE_STATE && (FCR & 0x40000000) == 0x00000000)
-	{
-		execute_int(get_trap_addr(TRAPNO_INT3));
-		standard_irq_callback(IRQ_INT3);
-		return;
-	}
+		/* timer int might be priority 10 if FCR bits 20-21 == 1; FCR bit 23 inhibits interrupt */
+		if (TIMER && (FCR & 0x00b00000) == 0x00100000)
+		{
+			printf("timer10\n");
+			m_timer_int_pending = 0;
+			execute_int(get_trap_addr(TRAPNO_TIMER));
+			return;
+		}
 
-	/* timer int might be priority 12 if FCR bits 20-21 == 0; FCR bit 23 inhibits interrupt */
-	if (m_timer_int_pending && (FCR & 0x00b00000) == 0x00000000)
-	{
-		m_timer_int_pending = 0;
-		execute_int(get_trap_addr(TRAPNO_TIMER));
-		return;
-	}
+		/* INT3 is priority 11; state is in bit 2 of ISR; FCR bit 30 inhibits interrupt */
+		if (INT3_LINE_STATE && (FCR & 0x40000000) == 0x00000000)
+		{
+			printf("int3\n");
+			execute_int(get_trap_addr(TRAPNO_INT3));
+			standard_irq_callback(IRQ_INT3);
+			return;
+		}
 
-	/* INT4 is priority 13; state is in bit 3 of ISR; FCR bit 31 inhibits interrupt */
-	if (INT4_LINE_STATE && (FCR & 0x80000000) == 0x00000000)
-	{
-		execute_int(get_trap_addr(TRAPNO_INT4));
-		standard_irq_callback(IRQ_INT4);
-		return;
-	}
+		/* timer int might be priority 12 if FCR bits 20-21 == 0; FCR bit 23 inhibits interrupt */
+		if (TIMER && (FCR & 0x00b00000) == 0x00000000)
+		{
+			printf("timer12\n");
+			m_timer_int_pending = 0;
+			execute_int(get_trap_addr(TRAPNO_TIMER));
+			return;
+		}
 
-	/* IO1 is priority 14; state is in bit 4 of ISR; FCR bit 2 enables input and FCR bit 0 inhibits interrupt */
-	if (IO1_LINE_STATE && (FCR & 0x00000005) == 0x00000004)
-	{
-		execute_int(get_trap_addr(TRAPNO_IO1));
-		standard_irq_callback(IRQ_IO1);
-		return;
-	}
+		/* INT4 is priority 13; state is in bit 3 of ISR; FCR bit 31 inhibits interrupt */
+		if (INT4_LINE_STATE && (FCR & 0x80000000) == 0x00000000)
+		{
+			printf("int4\n");
+			execute_int(get_trap_addr(TRAPNO_INT4));
+			standard_irq_callback(IRQ_INT4);
+			return;
+		}
 
-	/* IO2 is priority 15; state is in bit 5 of ISR; FCR bit 6 enables input and FCR bit 4 inhibits interrupt */
-	if (IO2_LINE_STATE && (FCR & 0x00000050) == 0x00000040)
-	{
-		execute_int(get_trap_addr(TRAPNO_IO2));
-		standard_irq_callback(IRQ_IO2);
-		return;
+		/* IO1 is priority 14; state is in bit 4 of ISR; FCR bit 2 enables input and FCR bit 0 inhibits interrupt */
+		if (IO1_LINE_STATE && (FCR & 0x00000005) == 0x00000004)
+		{
+			printf("io1\n");
+			execute_int(get_trap_addr(TRAPNO_IO1));
+			standard_irq_callback(IRQ_IO1);
+			return;
+		}
+
+		/* IO2 is priority 15; state is in bit 5 of ISR; FCR bit 6 enables input and FCR bit 4 inhibits interrupt */
+		if (IO2_LINE_STATE && (FCR & 0x00000050) == 0x00000040)
+		{
+			printf("io2\n");
+			execute_int(get_trap_addr(TRAPNO_IO2));
+			standard_irq_callback(IRQ_IO2);
+			return;
+		}
 	}
 }
 
@@ -1542,7 +1622,10 @@ void hyperstone_device::execute_run()
 	if (m_intblock < 0)
 		m_intblock = 0;
 
-	check_interrupts();
+	if (m_timer_int_pending)
+		check_interrupts<IS_TIMER>();
+	else
+		check_interrupts<NO_TIMER>();
 
 	do
 	{
@@ -1826,7 +1909,12 @@ void hyperstone_device::execute_run()
 		}
 
 		if (--m_intblock == 0)
-			check_interrupts();
+		{
+			if (m_timer_int_pending)
+				check_interrupts<IS_TIMER>();
+			else
+				check_interrupts<NO_TIMER>();
+		}
 
 	} while( m_icount > 0 );
 }
