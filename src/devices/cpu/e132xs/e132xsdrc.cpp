@@ -221,7 +221,7 @@ void hyperstone_device::code_compile_block(offs_t pc)
 		try
 		{
 			/* start the block */
-			block = drcuml->begin_block(4096);
+			block = drcuml->begin_block(8192);
 
 			/* loop until we get through all instruction sequences */
 			for (seqhead = desclist; seqhead != nullptr; seqhead = seqlast->next())
@@ -389,9 +389,6 @@ void hyperstone_device::static_generate_interrupt_checks()
 
 	alloc_handle(drcuml, &m_interrupt_checks, "int_checks");
 	UML_HANDLE(block, *m_interrupt_checks);
-
-	UML_SUB(block, mem(&m_intblock), mem(&m_intblock), 1);
-	UML_MOVc(block, uml::COND_S, mem(&m_intblock), 0);
 
 	uml::code_label labelnum = 1;
 	int done_int = labelnum++;
@@ -731,9 +728,20 @@ void hyperstone_device::generate_interrupt_checks_with_timer(drcuml_block *block
     an exception if out
 -------------------------------------------------*/
 
-void hyperstone_device::generate_update_cycles(drcuml_block *block)
+void hyperstone_device::generate_update_cycles(drcuml_block *block, bool check_interrupts)
 {
-	UML_CALLH(block, *m_interrupt_checks);
+	if (check_interrupts)
+	{
+		UML_SUB(block, mem(&m_intblock), mem(&m_intblock), 1);
+		UML_MOVc(block, uml::COND_S, mem(&m_intblock), 0);
+
+		UML_CALLH(block, *m_interrupt_checks);
+	}
+	else
+	{
+		UML_SUB(block, mem(&m_intblock), mem(&m_intblock), 1);
+		UML_MOVc(block, uml::COND_S, mem(&m_intblock), 0);
+	}
 
 	UML_SUB(block, mem(&m_icount), mem(&m_icount), I7);
 	UML_EXHc(block, uml::COND_S, *m_out_of_cycles, DRC_PC);
@@ -822,48 +830,6 @@ void hyperstone_device::log_add_disasm_comment(drcuml_block *block, uint32_t pc,
 	{
 		block->append_comment("%08X: %08x", pc, op);
 	}
-}
-
-
-/*------------------------------------------------------------------
-    generate_delay_slot_and_branch
-------------------------------------------------------------------*/
-
-void hyperstone_device::generate_delay_slot_and_branch(drcuml_block *block, compiler_state *compiler, const opcode_desc *desc)
-{
-	compiler_state compiler_temp = *compiler;
-
-	generate_update_cycles(block);
-
-	/* fetch the target register if dynamic, in case it is modified by the delay slot */
-	if (desc->targetpc == BRANCH_TARGET_DYNAMIC)
-		UML_MOV(block, mem(&m_branch_dest), DRC_PC);
-
-	if (desc->delayslots)
-	{
-		/* compile the delay slot using temporary compiler state */
-		assert(desc->delay.first() != nullptr);
-		generate_sequence_instruction(block, &compiler_temp, desc->delay.first());       // <next instruction>
-		generate_update_cycles(block);
-		generate_delay_slot_and_branch(block, &compiler_temp, desc->delay.last());
-		UML_MOV(block, mem(&m_branch_dest), DRC_PC);
-	}
-
-	/* update the cycles and jump through the hash table to the target */
-	if (desc->targetpc != BRANCH_TARGET_DYNAMIC)
-	{
-		if (desc->flags & OPFLAG_INTRABLOCK_BRANCH)
-			UML_JMP(block, desc->targetpc | 0x80000000);
-		else
-			UML_HASHJMP(block, 0, desc->targetpc, *m_nocode);
-	}
-	else
-	{
-		UML_HASHJMP(block, 0, mem(&m_branch_dest), *m_nocode);
-	}
-
-	/* update the label */
-	compiler->m_labelnum = compiler_temp.m_labelnum;
 }
 
 
@@ -1198,6 +1164,14 @@ bool hyperstone_device::generate_opcode(drcuml_block *block, compiler_state *com
 		case 0xfe: generate_trap_op(block, compiler, desc); break;
 		case 0xff: generate_trap_op(block, compiler, desc); break;
 	}
+
+	int no_delay_taken = compiler->m_labelnum++;
+	UML_TEST(block, mem(&m_delay_slot_taken), ~0);
+	UML_JMPc(block, uml::COND_Z, no_delay_taken);
+	UML_MOV(block, mem(&m_delay_slot_taken), 0);
+	generate_update_cycles(block);
+	UML_HASHJMP(block, 0, DRC_PC, *m_nocode);
+	UML_LABEL(block, no_delay_taken);
 
 	int done;
 	UML_AND(block, I0, DRC_SR, (T_MASK | P_MASK));

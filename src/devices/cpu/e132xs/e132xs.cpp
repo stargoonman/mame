@@ -413,7 +413,16 @@ uint32_t hyperstone_device::get_emu_code_addr(uint8_t num) /* num is OP */
 #if E132XS_LOG_INTERPRETER_REGS
 void hyperstone_device::dump_registers()
 {
-	fwrite(&m_icount, 4, 1, m_trace_log);
+	static uint64_t total_ops = 0;
+	total_ops++;
+	if (total_ops < 74000000ULL)
+		return;
+	uint8_t packed[4];
+	packed[0] = (uint8_t)m_intblock;
+	packed[1] = (uint8_t)(m_icount >> 16);
+	packed[2] = (uint8_t)(m_icount >>  8);
+	packed[3] = (uint8_t)(m_icount >>  0);
+	fwrite(packed, 1, 4, m_trace_log);
 	fwrite(m_global_regs, 4, 32, m_trace_log);
 	fwrite(m_local_regs, 4, 64, m_trace_log);
 }
@@ -1299,6 +1308,7 @@ void hyperstone_device::init(int scale_mask)
 	save_item(NAME(m_instruction_length));
 	save_item(NAME(m_intblock));
 	save_item(NAME(m_delay_slot));
+	save_item(NAME(m_delay_slot_taken));
 	save_item(NAME(m_tr_clocks_per_tick));
 	save_item(NAME(m_tr_base_value));
 	save_item(NAME(m_tr_base_cycles));
@@ -1908,8 +1918,9 @@ void hyperstone_device::execute_run()
 			execute_exception(addr);
 		}
 
-		if (--m_intblock == 0)
+		if (--m_intblock <= 0)
 		{
+			m_intblock = 0;
 			if (m_timer_int_pending)
 				check_interrupts<IS_TIMER>();
 			else

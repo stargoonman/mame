@@ -276,6 +276,7 @@ protected:
 	uint32_t m_prev_pc;
 	uint32_t m_delay_pc;
 	uint32_t m_delay_slot;
+	uint32_t m_delay_slot_taken;
 
 	uint32_t m_opcodexor;
 
@@ -451,9 +452,8 @@ private:
 	void static_generate_interrupt_checks();
 	void generate_interrupt_checks_no_timer(drcuml_block *block, uml::code_label &labelnum);
 	void generate_interrupt_checks_with_timer(drcuml_block *block, uml::code_label &labelnum);
-	void generate_delay_slot_and_branch(drcuml_block *block, compiler_state *compiler, const opcode_desc *desc);
 	void generate_branch(drcuml_block *block, uml::parameter targetpc, bool update_cycles = true);
-	void generate_update_cycles(drcuml_block *block);
+	void generate_update_cycles(drcuml_block *block, bool check_interrupts = true);
 	void generate_checksum_block(drcuml_block *block, compiler_state *compiler, const opcode_desc *seqhead, const opcode_desc *seqlast);
 	void generate_sequence_instruction(drcuml_block *block, compiler_state *compiler, const opcode_desc *desc);
 	void log_add_disasm_comment(drcuml_block *block, uint32_t pc, uint32_t op);
