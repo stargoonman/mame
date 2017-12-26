@@ -1230,6 +1230,7 @@ bool e132xs_frontend::describe(opcode_desc &desc, const opcode_desc *prev)
 			desc.regin[lsrc_group] |= 1 << lsrc_code;
 			desc.regin[ldst_group] |= 1 << ldst_code;
 			desc.regout[0] |= (3 << 14); // global regs 14, 15
+			desc.length = 4;
 			break;
 		case 0xcf: // do
 			return false;

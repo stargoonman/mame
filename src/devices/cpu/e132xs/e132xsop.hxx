@@ -1387,24 +1387,21 @@ void hyperstone_device::hyperstone_shldi()
 	SR &= ~(C_MASK | V_MASK | Z_MASK | N_MASK);
 
 	const uint32_t n = HI_N ? HI_N_VALUE : LO_N_VALUE;
-	if ((HI_N || n) && ((val << (n - 1)) & 0x8000000000000000U))
-		SR |= C_MASK;
+	SR |= (n)?(((val<<(n-1))&0x8000000000000000ULL)?1:0):0;
 
-	const uint64_t mask = ((1U << (32 - n)) - 1) ^ 0xffffffff;
-	const uint32_t tmp  = high_order << n;
+	const uint32_t tmp = high_order << n;
+	uint32_t mask = (uint32_t)(0xffffffff00000000ULL >> n);
 
 	if (((high_order & mask) && (!(tmp & 0x80000000))) || (((high_order & mask) ^ mask) && (tmp & 0x80000000)))
 		SR |= V_MASK;
 
 	val <<= n;
 
-	high_order = extract_64hi(val);
-
 	if (val == 0)
 		SR |= Z_MASK;
-	SR |= SIGN_TO_N(high_order);
+	SR |= SIGN64_TO_N(val);
 
-	m_local_regs[dst_code] = high_order;
+	m_local_regs[dst_code] = extract_64hi(val);
 	m_local_regs[dstf_code] = extract_64lo(val);
 
 	m_icount -= m_clock_cycles_2;
@@ -1428,17 +1425,19 @@ void hyperstone_device::hyperstone_shld()
 		return;
 	}
 
-	uint32_t n = m_local_regs[src_code] & 0x1f;
-	uint32_t high_order = m_local_regs[dst_code]; /* registers offset by frame pointer */
+	uint32_t high_order = m_local_regs[dst_code];
 	uint32_t low_order  = m_local_regs[dstf_code];
 
 	uint64_t val = concat_64(high_order, low_order);
 
 	SR &= ~(C_MASK | V_MASK | Z_MASK | N_MASK);
-	SR |= (n)?(((val<<(n-1))&0x8000000000000000U)?1:0):0;
 
-	uint32_t tmp = high_order << n;
-	uint32_t mask = (uint32_t)(0xffffffff00000000ULL >> n);
+	const uint32_t n = m_local_regs[src_code] & 0x1f;
+	SR |= (n)?(((val<<(n-1))&0x8000000000000000ULL)?1:0):0;
+
+	const uint32_t tmp = high_order << n;
+	const uint32_t mask = (uint32_t)(0xffffffff00000000ULL >> n);
+
 	if (((high_order & mask) && (!(tmp & 0x80000000))) || (((high_order & mask) ^ mask) && (tmp & 0x80000000)))
 		SR |= V_MASK;
 
@@ -1515,14 +1514,14 @@ void hyperstone_device::hyperstone_rol()
 
 #ifdef MISSIONCRAFT_FLAGS
 	const uint32_t base = val;
-	const uint64_t mask = ((1U << (32 - n)) - 1) ^ 0xffffffff;
+	const uint32_t mask = (uint32_t)(0xffffffff00000000ULL >> n);
 #endif
 
 	if (n)
 		val = (val << n) | (val >> (32 - n));
 
 #ifdef MISSIONCRAFT_FLAGS
-	SR &= ~(V_MASK | Z_MASK | C_MASK);
+	SR &= ~(V_MASK | Z_MASK | C_MASK | N_MASK);
 	if (((base & mask) && (!(val & 0x80000000))) || (((base & mask) ^ mask) && (val & 0x80000000)))
 		SR |= V_MASK;
 #else
@@ -2235,7 +2234,7 @@ void hyperstone_device::hyperstone_extend()
 	{
 		// signed or unsigned multiplication, single word product
 		case EMUL:
-		case 0x100: // used in "N" type cpu
+		case EMUL_N: // used in "N" type cpu
 			m_global_regs[15] = (uint32_t)(vals * vald);
 			break;
 
@@ -2247,13 +2246,13 @@ void hyperstone_device::hyperstone_extend()
 			m_global_regs[15] = (uint32_t)result;
 			break;
 		}
+
 		// signed multiplication, double word product
 		case EMULS:
 		{
 			const int64_t result = (int64_t)(int32_t)vals * (int64_t)(int32_t)vald;
 			m_global_regs[14] = (uint32_t)(result >> 32);
 			m_global_regs[15] = (uint32_t)result;
-
 			break;
 		}
 
@@ -2270,6 +2269,7 @@ void hyperstone_device::hyperstone_extend()
 			m_global_regs[15] = (uint32_t)result;
 			break;
 		}
+
 		// signed multiply/substract, single word product difference
 		case EMSUB:
 			m_global_regs[15] = (int32_t)m_global_regs[15] - ((int32_t)vals * (int32_t)vald);
@@ -2281,19 +2281,18 @@ void hyperstone_device::hyperstone_extend()
 			int64_t result = (int64_t)concat_64(m_global_regs[14], m_global_regs[15]) - (int64_t)((int64_t)(int32_t)vals * (int64_t)(int32_t)vald);
 			m_global_regs[14] = (uint32_t)(result >> 32);
 			m_global_regs[15] = (uint32_t)result;
-
 			break;
 		}
 
 		// signed half-word multiply/add, single word product sum
 		case EHMAC:
-			m_global_regs[15] = (int32_t)m_global_regs[15] + ((int32_t)((vald & 0xffff0000) >> 16) * (int32_t)((vals & 0xffff0000) >> 16)) + ((int32_t)(vald & 0xffff) * (int32_t)(vals & 0xffff));
+			m_global_regs[15] = (int32_t)m_global_regs[15] + ((int32_t)(vald >> 16) * (int32_t)(vals >> 16)) + ((int32_t)(vald & 0xffff) * (int32_t)(vals & 0xffff));
 			break;
 
 		// signed half-word multiply/add, double word product sum
 		case EHMACD:
 		{
-			int64_t result = (int64_t)concat_64(m_global_regs[14], m_global_regs[15]) + (int64_t)((int64_t)(int32_t)((vald & 0xffff0000) >> 16) * (int64_t)(int32_t)((vals & 0xffff0000) >> 16)) + ((int64_t)(int32_t)(vald & 0xffff) * (int64_t)(int32_t)(vals & 0xffff));
+			int64_t result = (int64_t)concat_64(m_global_regs[14], m_global_regs[15]) + (int64_t)((int64_t)(int32_t)(vald >> 16) * (int64_t)(int32_t)(vals >> 16)) + ((int64_t)(int32_t)(vald & 0xffff) * (int64_t)(int32_t)(vals & 0xffff));
 			m_global_regs[14] = (uint32_t)(result >> 32);
 			m_global_regs[15] = (uint32_t)result;
 			break;
@@ -2301,14 +2300,14 @@ void hyperstone_device::hyperstone_extend()
 
 		// half-word complex multiply
 		case EHCMULD:
-			m_global_regs[14] = (((vald & 0xffff0000) >> 16) * ((vals & 0xffff0000) >> 16)) - ((vald & 0xffff) * (vals & 0xffff));
-			m_global_regs[15] = (((vald & 0xffff0000) >> 16) * (vals & 0xffff)) + ((vald & 0xffff) * ((vals & 0xffff0000) >> 16));
+			m_global_regs[14] = ((vald >> 16) * (vals >> 16    )) - ((vald & 0xffff) * (vals &  0xffff));
+			m_global_regs[15] = ((vald >> 16) * (vals &  0xffff)) + ((vald & 0xffff) * (vals >> 16    ));
 			break;
 
 		// half-word complex multiply/add
 		case EHCMACD:
-			m_global_regs[14] += (((vald & 0xffff0000) >> 16) * ((vals & 0xffff0000) >> 16)) - ((vald & 0xffff) * (vals & 0xffff));
-			m_global_regs[15] += (((vald & 0xffff0000) >> 16) * (vals & 0xffff)) + ((vald & 0xffff) * ((vals & 0xffff0000) >> 16));
+			m_global_regs[14] += ((vald >> 16) * (vals >> 16    )) - ((vald & 0xffff) * (vals &  0xffff));
+			m_global_regs[15] += ((vald >> 16) * (vals &  0xffff)) + ((vald & 0xffff) * (vals >> 16    ));
 			break;
 
 		// half-word (complex) add/substract
@@ -2317,8 +2316,8 @@ void hyperstone_device::hyperstone_extend()
 		{
 			const uint32_t r14 = m_global_regs[14];
 			const uint32_t r15 = m_global_regs[15];
-			m_global_regs[14] = (((((vals & 0xffff0000) >> 16) + r14) << 16) & 0xffff0000) | (((vals & 0xffff) + r15) & 0xffff);
-			m_global_regs[15] = (((((vals & 0xffff0000) >> 16) - r14) << 16) & 0xffff0000) | (((vals & 0xffff) - r15) & 0xffff);
+			m_global_regs[14] = (((vals >> 16) + r14) << 16) | (((vals & 0xffff) + r15) & 0xffff);
+			m_global_regs[15] = (((vals >> 16) - r14) << 16) | (((vals & 0xffff) - r15) & 0xffff);
 			break;
 		}
 
@@ -2349,7 +2348,7 @@ void hyperstone_device::hyperstone_extend()
 			break;
 	}
 
-	m_icount -= m_clock_cycles_1; //TODO: with the latency it can change
+	m_icount -= m_clock_cycles_1; // TODO: with the latency it can change
 }
 
 

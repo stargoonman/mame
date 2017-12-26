@@ -38,6 +38,13 @@
 #define SIGN64_TO_N(val)        ((val & 0x8000000000000000ULL) >> 61)
 
 /* Extended DSP instructions */
+#define EHMAC           0x02a
+#define EHMACD          0x02e
+#define EHCMULD         0x046
+#define EHCMACD         0x04e
+#define EHCSUMD         0x086
+#define EHCFFTD         0x096
+#define EMUL_N			0x100
 #define EMUL            0x102
 #define EMULU           0x104
 #define EMULS           0x106
@@ -45,12 +52,6 @@
 #define EMACD           0x10e
 #define EMSUB           0x11a
 #define EMSUBD          0x11e
-#define EHMAC           0x02a
-#define EHMACD          0x02e
-#define EHCMULD         0x046
-#define EHCMACD         0x04e
-#define EHCSUMD         0x086
-#define EHCFFTD         0x096
 #define EHCFFTSD        0x296
 
 /* IRQ numbers */

@@ -902,7 +902,7 @@ bool hyperstone_device::generate_opcode(drcuml_block *block, compiler_state *com
 {
 	uint32_t op = (uint32_t)desc->opptr.w[0];
 
-	UML_MOV(block, I0, op);
+	//UML_MOV(block, I0, op);
 	UML_ADD(block, DRC_PC, DRC_PC, 2);
 
 	switch (op >> 8)

@@ -415,7 +415,7 @@ void hyperstone_device::dump_registers()
 {
 	static uint64_t total_ops = 0;
 	total_ops++;
-	if (total_ops < 74000000ULL)
+	if (total_ops < 124000000ULL)
 		return;
 	uint8_t packed[4];
 	packed[0] = (uint8_t)m_intblock;
@@ -933,7 +933,6 @@ void hyperstone_device::check_interrupts()
 		/* IO3 is priority 5; state is in bit 6 of ISR; FCR bit 10 enables input and FCR bit 8 inhibits interrupt */
 		if (IO3_LINE_STATE && (FCR & 0x00000500) == 0x00000400)
 		{
-			printf("io3\n");
 			execute_int(get_trap_addr(TRAPNO_IO3));
 			standard_irq_callback(IRQ_IO3);
 			return;
@@ -942,7 +941,6 @@ void hyperstone_device::check_interrupts()
 		/* INT1 is priority 7; state is in bit 0 of ISR; FCR bit 28 inhibits interrupt */
 		if (INT1_LINE_STATE && (FCR & 0x10000000) == 0x00000000)
 		{
-			printf("int1\n");
 			execute_int(get_trap_addr(TRAPNO_INT1));
 			standard_irq_callback(IRQ_INT1);
 			return;
@@ -951,7 +949,6 @@ void hyperstone_device::check_interrupts()
 		/* INT2 is priority 9; state is in bit 1 of ISR; FCR bit 29 inhibits interrupt */
 		if (INT2_LINE_STATE && (FCR & 0x20000000) == 0x00000000)
 		{
-			printf("int2\n");
 			execute_int(get_trap_addr(TRAPNO_INT2));
 			standard_irq_callback(IRQ_INT2);
 			return;
@@ -960,7 +957,6 @@ void hyperstone_device::check_interrupts()
 		/* INT3 is priority 11; state is in bit 2 of ISR; FCR bit 30 inhibits interrupt */
 		if (INT3_LINE_STATE && (FCR & 0x40000000) == 0x00000000)
 		{
-			printf("int3\n");
 			execute_int(get_trap_addr(TRAPNO_INT3));
 			standard_irq_callback(IRQ_INT3);
 			return;
@@ -969,7 +965,6 @@ void hyperstone_device::check_interrupts()
 		/* INT4 is priority 13; state is in bit 3 of ISR; FCR bit 31 inhibits interrupt */
 		if (INT4_LINE_STATE && (FCR & 0x80000000) == 0x00000000)
 		{
-			printf("int4\n");
 			execute_int(get_trap_addr(TRAPNO_INT4));
 			standard_irq_callback(IRQ_INT4);
 			return;
@@ -978,7 +973,6 @@ void hyperstone_device::check_interrupts()
 		/* IO1 is priority 14; state is in bit 4 of ISR; FCR bit 2 enables input and FCR bit 0 inhibits interrupt */
 		if (IO1_LINE_STATE && (FCR & 0x00000005) == 0x00000004)
 		{
-			printf("io1\n");
 			execute_int(get_trap_addr(TRAPNO_IO1));
 			standard_irq_callback(IRQ_IO1);
 			return;
@@ -987,7 +981,6 @@ void hyperstone_device::check_interrupts()
 		/* IO2 is priority 15; state is in bit 5 of ISR; FCR bit 6 enables input and FCR bit 4 inhibits interrupt */
 		if (IO2_LINE_STATE && (FCR & 0x00000050) == 0x00000040)
 		{
-			printf("io2\n");
 			execute_int(get_trap_addr(TRAPNO_IO2));
 			standard_irq_callback(IRQ_IO2);
 			return;
@@ -998,7 +991,6 @@ void hyperstone_device::check_interrupts()
 		/* IO3 is priority 5; state is in bit 6 of ISR; FCR bit 10 enables input and FCR bit 8 inhibits interrupt */
 		if (IO3_LINE_STATE && (FCR & 0x00000500) == 0x00000400)
 		{
-			printf("io3\n");
 			execute_int(get_trap_addr(TRAPNO_IO3));
 			standard_irq_callback(IRQ_IO3);
 			return;
@@ -1007,7 +999,6 @@ void hyperstone_device::check_interrupts()
 		/* timer int might be priority 6 if FCR bits 20-21 == 3; FCR bit 23 inhibits interrupt */
 		if (TIMER && (FCR & 0x00b00000) == 0x00300000)
 		{
-			printf("timer6\n");
 			m_timer_int_pending = 0;
 			execute_int(get_trap_addr(TRAPNO_TIMER));
 			return;
@@ -1016,7 +1007,6 @@ void hyperstone_device::check_interrupts()
 		/* INT1 is priority 7; state is in bit 0 of ISR; FCR bit 28 inhibits interrupt */
 		if (INT1_LINE_STATE && (FCR & 0x10000000) == 0x00000000)
 		{
-			printf("int1\n");
 			execute_int(get_trap_addr(TRAPNO_INT1));
 			standard_irq_callback(IRQ_INT1);
 			return;
@@ -1025,7 +1015,6 @@ void hyperstone_device::check_interrupts()
 		/* timer int might be priority 8 if FCR bits 20-21 == 2; FCR bit 23 inhibits interrupt */
 		if (TIMER && (FCR & 0x00b00000) == 0x00200000)
 		{
-			printf("timer8\n");
 			m_timer_int_pending = 0;
 			execute_int(get_trap_addr(TRAPNO_TIMER));
 			return;
@@ -1034,7 +1023,6 @@ void hyperstone_device::check_interrupts()
 		/* INT2 is priority 9; state is in bit 1 of ISR; FCR bit 29 inhibits interrupt */
 		if (INT2_LINE_STATE && (FCR & 0x20000000) == 0x00000000)
 		{
-			printf("int2\n");
 			execute_int(get_trap_addr(TRAPNO_INT2));
 			standard_irq_callback(IRQ_INT2);
 			return;
@@ -1043,7 +1031,6 @@ void hyperstone_device::check_interrupts()
 		/* timer int might be priority 10 if FCR bits 20-21 == 1; FCR bit 23 inhibits interrupt */
 		if (TIMER && (FCR & 0x00b00000) == 0x00100000)
 		{
-			printf("timer10\n");
 			m_timer_int_pending = 0;
 			execute_int(get_trap_addr(TRAPNO_TIMER));
 			return;
@@ -1052,7 +1039,6 @@ void hyperstone_device::check_interrupts()
 		/* INT3 is priority 11; state is in bit 2 of ISR; FCR bit 30 inhibits interrupt */
 		if (INT3_LINE_STATE && (FCR & 0x40000000) == 0x00000000)
 		{
-			printf("int3\n");
 			execute_int(get_trap_addr(TRAPNO_INT3));
 			standard_irq_callback(IRQ_INT3);
 			return;
@@ -1061,7 +1047,6 @@ void hyperstone_device::check_interrupts()
 		/* timer int might be priority 12 if FCR bits 20-21 == 0; FCR bit 23 inhibits interrupt */
 		if (TIMER && (FCR & 0x00b00000) == 0x00000000)
 		{
-			printf("timer12\n");
 			m_timer_int_pending = 0;
 			execute_int(get_trap_addr(TRAPNO_TIMER));
 			return;
@@ -1070,7 +1055,6 @@ void hyperstone_device::check_interrupts()
 		/* INT4 is priority 13; state is in bit 3 of ISR; FCR bit 31 inhibits interrupt */
 		if (INT4_LINE_STATE && (FCR & 0x80000000) == 0x00000000)
 		{
-			printf("int4\n");
 			execute_int(get_trap_addr(TRAPNO_INT4));
 			standard_irq_callback(IRQ_INT4);
 			return;
@@ -1079,7 +1063,6 @@ void hyperstone_device::check_interrupts()
 		/* IO1 is priority 14; state is in bit 4 of ISR; FCR bit 2 enables input and FCR bit 0 inhibits interrupt */
 		if (IO1_LINE_STATE && (FCR & 0x00000005) == 0x00000004)
 		{
-			printf("io1\n");
 			execute_int(get_trap_addr(TRAPNO_IO1));
 			standard_irq_callback(IRQ_IO1);
 			return;
@@ -1088,7 +1071,6 @@ void hyperstone_device::check_interrupts()
 		/* IO2 is priority 15; state is in bit 5 of ISR; FCR bit 6 enables input and FCR bit 4 inhibits interrupt */
 		if (IO2_LINE_STATE && (FCR & 0x00000050) == 0x00000040)
 		{
-			printf("io2\n");
 			execute_int(get_trap_addr(TRAPNO_IO2));
 			standard_irq_callback(IRQ_IO2);
 			return;
