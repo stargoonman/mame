@@ -416,14 +416,14 @@ void hyperstone_device::dump_registers()
 	static uint64_t total_ops = 0;
 	//static uint64_t total_11094 = 0;
 	total_ops++;
-	if (total_ops < 1053000000ULL)
+	if (total_ops < 389000000ULL)
 	{
 		//if (m_global_regs[0] == 0x11094)
 		//{
 		//	total_11094++;
 		//}
 		return;
-	} else if (total_ops == 1053000000ULL) {
+	} else if (total_ops == 389000000ULL) {
 		//printf("Total non-log hits of 0x11094: %d\n", (uint32_t)total_11094);
 	}
 	uint8_t packed[4];
@@ -1628,7 +1628,7 @@ void hyperstone_device::execute_run()
 	else
 		check_interrupts<NO_TIMER>();
 
-	do
+	while (m_icount > 0)
 	{
 #if E132XS_LOG_INTERPRETER_REGS
 		dump_registers();
@@ -1917,8 +1917,7 @@ void hyperstone_device::execute_run()
 			else
 				check_interrupts<NO_TIMER>();
 		}
-
-	} while( m_icount > 0 );
+	}
 }
 
 DEFINE_DEVICE_TYPE(E116T,      e116t_device,      "e116t",      "E1-16T")

@@ -876,10 +876,10 @@ void hyperstone_device::generate_sum(drcuml_block *block, compiler_state *compil
 	UML_SETc(block, uml::COND_NZ, I6);
 	UML_ROLINS(block, DRC_SR, I6, C_SHIFT, C_MASK);
 
-	UML_XOR(block, I1, I5, I2);
 	UML_XOR(block, I6, I5, I1);
+	UML_XOR(block, I1, I5, I2);
 	UML_AND(block, I1, I1, I6);
-	UML_TEST(block, I1, 0x80000000);
+	UML_AND(block, I1, I1, 0x80000000);
 	UML_ROLINS(block, DRC_SR, I1, 4, V_MASK);
 
 	UML_TEST(block, I5, ~0);
@@ -1920,6 +1920,7 @@ void hyperstone_device::generate_movi(drcuml_block *block, compiler_state *compi
 	}
 	else
 	{
+		UML_AND(block, DRC_SR, DRC_SR, ~H_MASK);
 		UML_ROLAND(block, I2, DRC_SR, 7, 0x7f);
 		UML_ADD(block, I0, I2, dst_code);
 		UML_AND(block, I0, I0, 0x3f);
@@ -2564,9 +2565,42 @@ void hyperstone_device::generate_sard(drcuml_block *block, compiler_state *compi
 
 void hyperstone_device::generate_sar(drcuml_block *block, compiler_state *compiler, const opcode_desc *desc)
 {
-	printf("Unimplemented: generate_sar (%08x)\n", desc->pc);
-	fflush(stdout);
-	fatalerror(" ");
+	UML_MOV(block, I7, mem(&m_clock_cycles_1));
+
+	uint16_t op = desc->opptr.w[0];
+
+	const uint32_t dst_code = (op & 0xf0) >> 4;
+	const uint32_t src_code = op & 0xf;
+
+	generate_check_delay_pc(block, compiler, desc);
+
+	UML_ROLAND(block, I1, DRC_SR, 7, 0x7f);
+	UML_ADD(block, I2, I1, dst_code);
+	UML_AND(block, I2, I2, 0x3f);
+	UML_LOAD(block, I0, (void *)m_local_regs, I2, SIZE_DWORD, SCALE_x4);
+
+	UML_ADD(block, I1, I1, src_code);
+	UML_AND(block, I1, I1, 0x3f);
+	UML_LOAD(block, I1, (void *)m_local_regs, I1, SIZE_DWORD, SCALE_x4);
+	UML_AND(block, I1, I1, 0x1f);
+
+	int no_shift = compiler->m_labelnum++;
+	UML_MOV(block, I3, 0);
+	UML_CMP(block, I1, 0);
+	UML_JMPc(block, uml::COND_E, no_shift);
+	UML_SUB(block, I4, I1, 1);
+	UML_SHR(block, I4, I0, I4);
+	UML_AND(block, I3, I4, 1);
+	UML_SAR(block, I0, I0, I1);
+	UML_LABEL(block, no_shift);
+
+	UML_TEST(block, I0, ~0);
+	UML_SETc(block, uml::COND_Z, I1);
+	UML_ROLINS(block, I3, I1, Z_SHIFT, Z_MASK);
+	UML_ROLINS(block, I3, I0, 3, N_MASK);
+	UML_ROLINS(block, DRC_SR, I3, 0, (N_MASK | Z_MASK | C_MASK));
+
+	UML_STORE(block, (void *)m_local_regs, I2, I0, SIZE_DWORD, SCALE_x4);
 }
 
 

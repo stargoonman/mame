@@ -72,6 +72,8 @@ public:
 	inline void ccfunc_unimplemented();
 	inline void ccfunc_print();
 	inline void ccfunc_total_cycles();
+	inline void ccfunc_standard_irq_callback();
+
 #if E132XS_LOG_DRC_REGS || E132XS_LOG_INTERPRETER_REGS
 	void dump_registers();
 #endif

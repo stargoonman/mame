@@ -2027,16 +2027,18 @@ void hyperstone_device::hyperstone_sari()
 	check_delay_PC();
 
 	const uint32_t dst_code = DST_GLOBAL ? DST_CODE : ((DST_CODE + GET_FP) & 0x3f);
-	uint32_t val = (DST_GLOBAL ? m_global_regs : m_local_regs)[dst_code];
 
 	const uint32_t n = HI_N ? HI_N_VALUE : LO_N_VALUE;
+	uint32_t val = (DST_GLOBAL ? m_global_regs : m_local_regs)[dst_code];
+
 	SR &= ~(C_MASK | Z_MASK | N_MASK);
 
 	if (HI_N || n)
 	{
+		const uint32_t sign_bit = val & 0x80000000;
+
 		SR |= (val >> (n - 1)) & 1;
 
-		uint32_t sign_bit = val & 0x80000000;
 		val >>= n;
 
 		if (sign_bit)
