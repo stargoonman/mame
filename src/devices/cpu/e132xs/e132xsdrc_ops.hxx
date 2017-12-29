@@ -872,7 +872,7 @@ void hyperstone_device::generate_sum(drcuml_block *block, compiler_state *compil
 	UML_DADD(block, I5, I1, I2);
 
 	UML_AND(block, DRC_SR, DRC_SR, ~(C_MASK | V_MASK | Z_MASK | N_MASK));
-	UML_DTEST(block, I5, 0x100000000U);
+	UML_DTEST(block, I5, 0x100000000ULL);
 	UML_SETc(block, uml::COND_NZ, I6);
 	UML_ROLINS(block, DRC_SR, I6, C_SHIFT, C_MASK);
 

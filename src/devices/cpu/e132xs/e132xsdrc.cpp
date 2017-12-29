@@ -807,6 +807,11 @@ void hyperstone_device::generate_checksum_block(drcuml_block *block, compiler_st
 			uint32_t sum = seqhead->opptr.w[0];
 			uint32_t addr = seqhead->physpc;
 			void *base = m_direct->read_ptr(addr, m_opcodexor);
+			if (base == nullptr)
+			{
+				printf("m_direct->read_ptr returned nullptr for address %08x\n", addr);
+				return;
+			}
 			UML_LOAD(block, I0, base, 0, SIZE_WORD, SCALE_x1);
 
 			if (seqhead->delay.first() != nullptr && seqhead->physpc != seqhead->delay.first()->physpc)
@@ -828,6 +833,11 @@ void hyperstone_device::generate_checksum_block(drcuml_block *block, compiler_st
 	{
 		uint32_t addr = seqhead->physpc;
 		void *base = m_direct->read_ptr(addr, m_opcodexor);
+		if (base == nullptr)
+		{
+			printf("m_direct->read_ptr returned nullptr for address %08x\n", addr);
+			return;
+		}
 		UML_LOAD(block, I0, base, 0, SIZE_WORD, SCALE_x1);
 		uint32_t sum = seqhead->opptr.w[0];
 		for (curdesc = seqhead->next(); curdesc != seqlast->next(); curdesc = curdesc->next())
