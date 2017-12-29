@@ -2863,7 +2863,7 @@ READ16_MEMBER(vamphalf_state::poosho_speedup_r)
 
 READ16_MEMBER(vamphalf_state::mrdig_speedup_r)
 {
-	if(space.device().safe_pc() == 0x1710)
+	if(space.device().safe_pc() == 0xae2a)
 	{
 		if(irq_active(space))
 			space.device().execute().spin_until_interrupt();
@@ -2871,7 +2871,7 @@ READ16_MEMBER(vamphalf_state::mrdig_speedup_r)
 			space.device().execute().eat_cycles(50);
 	}
 
-	return m_wram[(0x00a99c / 2)+offset];
+	return m_wram[(0x0e07f0 / 2)+offset];
 }
 
 READ16_MEMBER(vamphalf_state::dtfamily_speedup_r)
@@ -3125,8 +3125,7 @@ DRIVER_INIT_MEMBER(vamphalf_state,jmpbreak)
 
 DRIVER_INIT_MEMBER(vamphalf_state,mrdig)
 {
-  // Code is executed at a99e and the drc really really doesn't like that
-//	m_maincpu->space(AS_PROGRAM).install_read_handler(0x00a99c, 0x00a99f, read16_delegate(FUNC(vamphalf_state::mrdig_speedup_r), this));
+	m_maincpu->space(AS_PROGRAM).install_read_handler(0x0e07f0, 0x0e07f3, read16_delegate(FUNC(vamphalf_state::mrdig_speedup_r), this));
 	m_maincpu->space(AS_PROGRAM).install_write_handler(0xe0000000, 0xe0000003, write16_delegate(FUNC(vamphalf_state::jmpbreak_flipscreen_w), this));
 
 	m_palshift = 0;
