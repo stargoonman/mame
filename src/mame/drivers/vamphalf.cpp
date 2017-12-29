@@ -3125,7 +3125,8 @@ DRIVER_INIT_MEMBER(vamphalf_state,jmpbreak)
 
 DRIVER_INIT_MEMBER(vamphalf_state,mrdig)
 {
-	m_maincpu->space(AS_PROGRAM).install_read_handler(0x00a99c, 0x00a99f, read16_delegate(FUNC(vamphalf_state::mrdig_speedup_r), this));
+  // Code is executed at a99e and the drc really really doesn't like that
+//	m_maincpu->space(AS_PROGRAM).install_read_handler(0x00a99c, 0x00a99f, read16_delegate(FUNC(vamphalf_state::mrdig_speedup_r), this));
 	m_maincpu->space(AS_PROGRAM).install_write_handler(0xe0000000, 0xe0000003, write16_delegate(FUNC(vamphalf_state::jmpbreak_flipscreen_w), this));
 
 	m_palshift = 0;
