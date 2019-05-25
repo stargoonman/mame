@@ -2447,6 +2447,7 @@ ficvipio                        // FIC 486-VIP-IO
 ficvipio2                       // FIC 486-VIP-IO2
 ftsserv                         // 1991 Apricot FTs (Scorpion)
 hot409                          // Shuttle HOT-409
+ht286                           //
 ibm5162                         // 1986 IBM XT 5162 (XT w/80286)
 ibm5170                         // 1984 IBM PC/AT 5170, original 6 MHz model
 ibm5170a                        // 1985 IBM PC/AT 5170, enhanced 8 MHz model
@@ -12640,6 +12641,8 @@ asrx                            // 1997 ASR-X
 
 @source:esqkt.cpp
 kt76                            // 1996 KT-76
+ts10                            //
+ts12                            //
 
 @source:esqmr.cpp
 mr61                            // 1996 MR-61
@@ -18041,6 +18044,9 @@ kopunch                         // 834-0103 (c) 1981 Sega
 
 @source:kramermc.cpp
 kramermc                        // 1987 Kramer MC
+
+@source:krokha.cpp
+krokha                          // 1990 SKB Kontur, USSR
 
 @source:kron.cpp
 kron180                         // 1995 Kron Ltd, Ukraine
@@ -37486,6 +37492,7 @@ apache3b                        // (c) 1988 Tatsumi + Kana Corporation license
 bigfight                        // (c) 1992 Tatsumi
 cyclwarr                        // (c) 1991 Tatsumi
 cyclwarra                       // (c) 1991 Tatsumi
+cyclwarrb                       // (c) 1991 Tatsumi
 roundup5                        // (c) 1989 Tatsumi
 
 @source:tattack.cpp
