@@ -1377,7 +1377,7 @@ std::vector<ui::menu_item> mame_ui_manager::slider_init(running_machine &machine
 	mixer_input info;
 	for (int item = 0; machine.sound().indexed_mixer_input(item, info); item++)
 	{
-		int32_t maxval = 2000;
+		int32_t maxval = 10000;
 		int32_t defval = 1000;
 
 		std::string str = string_format(_("%1$s Volume"), info.stream->input_name(info.inputnum));

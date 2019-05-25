@@ -673,6 +673,7 @@ public:
 	void jockeygp(machine_config &config);
 	void vliner(machine_config &config);
 	void sbp(machine_config &config);
+    void mslug2t(machine_config &config);
 
 protected:
 	virtual void machine_start() override;
@@ -2779,7 +2780,6 @@ void mvs_led_state::pnyaa(machine_config &config)
 void mvs_led_state::popbounc(machine_config &config)
 {
 	mv1_fixed(config);
-
 	NEOGEO_CTRL_EDGE_CONNECTOR(config.replace(), m_edge, neogeo_arc_edge_fixed, "dial", true);
 
 	cartslot_fixed(config, "rom");
@@ -2851,7 +2851,16 @@ void mvs_led_state::sbp(machine_config &config)
 	cartslot_fixed(config, "boot_sbp");
 }
 
+void mvs_led_state::mslug2t(machine_config &config)
+{
+	neobase(config);
+    
+    MCFG_DEVICE_MODIFY("maincpu")
+	MCFG_DEVICE_CLOCK(NEOGEO_MAIN_CPU_CLOCK * 2)
 
+	MCFG_DEVICE_MODIFY("audiocpu")
+	MCFG_DEVICE_CLOCK(NEOGEO_AUDIO_CPU_CLOCK * 2)
+}
 
 /*************************************
  *
@@ -11802,7 +11811,7 @@ GAME( 1998, rbff2,      neogeo,   neobase,   neogeo,    mvs_led_state, empty_ini
 GAME( 1998, rbff2h,     rbff2,    neobase,   neogeo,    mvs_led_state, empty_init, ROT0, "SNK", "Real Bout Fatal Fury 2 - The Newcomers / Real Bout Garou Densetsu 2 - The Newcomers (NGH-2400)", MACHINE_SUPPORTS_SAVE )
 GAME( 1998, rbff2k,     rbff2,    neobase,   neogeo,    mvs_led_state, empty_init, ROT0, "SNK", "Real Bout Fatal Fury 2 - The Newcomers (Korean release)", MACHINE_SUPPORTS_SAVE ) // no Japanese title / mode
 GAME( 1998, mslug2,     neogeo,   neobase,   neogeo,    mvs_led_state, empty_init, ROT0, "SNK", "Metal Slug 2 - Super Vehicle-001/II (NGM-2410 ~ NGH-2410)", MACHINE_SUPPORTS_SAVE )
-GAME( 2015, mslug2t,    mslug2,   neobase,   neogeo,    mvs_led_state, empty_init, ROT0, "hack (trap15)", "Metal Slug 2 Turbo (NGM-9410) (hack)", MACHINE_SUPPORTS_SAVE )
+GAME( 2015, mslug2t,    mslug2,   mslug2t,   neogeo,    mvs_led_state, empty_init, ROT0, "hack (trap15)", "Metal Slug 2 Turbo (NGM-9410) (hack)", MACHINE_SUPPORTS_SAVE )
 GAME( 1998, kof98,      neogeo,   kof98,     neogeo,    mvs_led_state, empty_init, ROT0, "SNK", "The King of Fighters '98 - The Slugfest / King of Fighters '98 - Dream Match Never Ends (NGM-2420)", MACHINE_SUPPORTS_SAVE )
 GAME( 1998, kof98a,     kof98,    kof98,     neogeo,    mvs_led_state, empty_init, ROT0, "SNK", "The King of Fighters '98 - The Slugfest / King of Fighters '98 - Dream Match Never Ends (NGM-2420, alt board)", MACHINE_SUPPORTS_SAVE )
 GAME( 1998, kof98k,     kof98,    kof98,     neogeo,    mvs_led_state, empty_init, ROT0, "SNK", "The King of Fighters '98 - The Slugfest / King of Fighters '98 - Dream Match Never Ends (Korean board, set 1)", MACHINE_SUPPORTS_SAVE )
@@ -11867,6 +11876,7 @@ GAME( 2003, kf2k3upl,   kof2003,  kf2k3upl,  neogeo,    mvs_led_state, empty_ini
 GAME( 2004, samsh5sp,   neogeo,   samsh5sp,  neogeo,    mvs_led_state, empty_init, ROT0, "Yuki Enterprise / SNK Playmore", "Samurai Shodown V Special / Samurai Spirits Zero Special (NGM-2720)", MACHINE_SUPPORTS_SAVE )
 GAME( 2004, samsh5sph,  samsh5sp, samsh5sp,  neogeo,    mvs_led_state, empty_init, ROT0, "Yuki Enterprise / SNK Playmore", "Samurai Shodown V Special / Samurai Spirits Zero Special (NGH-2720, 2nd release, less censored)", MACHINE_SUPPORTS_SAVE )
 GAME( 2004, samsh5spho, samsh5sp, samsh5sp,  neogeo,    mvs_led_state, empty_init, ROT0, "Yuki Enterprise / SNK Playmore", "Samurai Shodown V Special / Samurai Spirits Zero Special (NGH-2720, 1st release, censored)", MACHINE_SUPPORTS_SAVE )
+
 
 // Alpha Denshi Co. / ADK (changed name in 1993)
 GAME( 1990, maglord,    neogeo,   neobase,   neogeo,    mvs_led_state, empty_init, ROT0, "Alpha Denshi Co.", "Magician Lord (NGM-005)", MACHINE_SUPPORTS_SAVE )

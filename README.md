@@ -1,87 +1,28 @@
 
-# **MAME** #
+# **About MAME_PLAYABLE** #
 
-[![Join the chat at https://gitter.im/mamedev/mame](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/mamedev/mame?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+mame_playable is an up-to-date repo based on the official release of mame64 to add minor quality-of-life improvements to help emulate games better for playing.
 
-Build status for tiny build only, containing just core parts of project:
+It was initially a build to include overclocked settings for a few games like Metal Slug 2 and Double Dragon.
+The fork will always keep up-to-date with the official mame release. If new playable games or some improvements are made in the official repo, it will also merge those changes as well.
 
-| OS/Compiler        | Status           | 
-| ------------- |:-------------:| 
-|Linux GCC / OSX Clang| [![Build Status](https://travis-ci.org/mamedev/mame.svg?branch=master)](https://travis-ci.org/mamedev/mame) |
-|Windows MinGW | [![Build Status](https://tea-ci.org/api/badges/mamedev/mame/status.svg)](https://tea-ci.org/mamedev/mame) |
-|Windows MSVC | [![Build status](https://ci.appveyor.com/api/projects/status/te0qy56b72tp5kmo?svg=true)](https://ci.appveyor.com/project/startaq/mame) |
+mame_playable will only overclocked emulated CPUs for games tested to have worked better without glitches, freezes or crashes.
+Games that rely on slowdowns such as Cave shooters will not have their CPUs overclocked.
 
-Static analysis status for entire build (except for third-party parts of project):
+Do not report any bugs to the mame dev or here on those games. If we find a problem to overclocked games, we're going to simply revert the change and live with the slowdowns.
+Please don't bother the mame devs especially.
 
-[![Coverity Scan Status](https://scan.coverity.com/projects/5727/badge.svg?flat=1)](https://scan.coverity.com/projects/mame-emulator)
+If you have any games with slowdowns that can be fixed with overclocking, let us know and we'll run through a heavy testing to make sure they work, and apply changes.
 
-What is MAME?
-=============
+# **List of Enhancements** #
+1. Overclocked emulated CPUs for games with slowdowns. Only supports games that passed overclock testing.
+- Double Dragon 1
+- Metal Slug 2 Turbo
 
-MAME is a multi-purpose emulation framework.
+2. Raised maximum volume for emulated sound channels from 2.0 to 10.0. This should greatly help with low-volume games like ones from Psikyosh.
 
-MAME's purpose is to preserve decades of software history. As electronic technology continues to rush forward, MAME prevents this important "vintage" software from being lost and forgotten. This is achieved by documenting the hardware and how it functions. The source code to MAME serves as this documentation. The fact that the software is usable serves primarily to validate the accuracy of the documentation (how else can you prove that you have recreated the hardware faithfully?). Over time, MAME (originally stood for Multiple Arcade Machine Emulator) absorbed the sister-project MESS (Multi Emulator Super System), so MAME now documents a wide variety of (mostly vintage) computers, video game consoles and calculators, in addition to the arcade video games that were its initial focus.
-
-How to compile?
-===============
-
-If you're on a *NIX or OSX system, it could be as easy as typing
-
-```
-make
-```
-
-for a MAME build,
-
-```
-make SUBTARGET=arcade
-```
-
-for an arcade-only build, or
-
-```
-make SUBTARGET=mess
-```
-
-for MESS build.
-
-See the [Compiling MAME](http://docs.mamedev.org/initialsetup/compilingmame.html) page on our documentation site for more information, including prerequisites for Mac OS X and popular Linux distributions.
-
-For recent versions of OSX you need to install [Xcode](https://developer.apple.com/xcode/) including command-line tools and [SDL 2.0](https://www.libsdl.org/download-2.0.php).
-
-For Windows users, we provide a ready-made [build environment](http://mamedev.org/tools/) based on MinGW-w64.
-
-Visual Studio builds are also possible, but you still need [build environment](http://mamedev.org/tools/) based on MinGW-w64.
-In order to generate solution and project files just run:
-
-```
-make vs2017
-```
-or use this command to build it directly using msbuild
-
-```
-make vs2017 MSBUILD=1
-```
-
-
-Where can I find out more?
-=============
-
-* [Official MAME Development Team Site](http://mamedev.org/) (includes binary downloads for MAME and MESS, wiki, forums, and more)
-* [Official MESS Wiki](http://mess.redump.net/)
-* [MAME Testers](http://mametesters.org/) (official bug tracker for MAME and MESS)
-
-
-Contributing
-=============
-
-## Coding standard
-
-MAME source code should be viewed and edited with your editor set to use four spaces per tab. Tabs are used for initial indentation of lines, with one tab used per indentation level. Spaces are used for other alignment within a line.
-
-Some parts of the code follow [Allman style](https://en.wikipedia.org/wiki/Indent_style#Allman_style); some parts of the code follow [K&R style](https://en.wikipedia.org/wiki/Indent_style#K.26R_style) -- mostly depending on who wrote the original version. **Above all else, be consistent with what you modify, and keep whitespace changes to a minimum when modifying existing source.** For new code, the majority tends to prefer Allman style, so if you don't care much, use that.
-
-All contributors need to either add a standard header for license info (on new files) or inform us of their wishes regarding which of the following licenses they would like their code to be made available under: the [BSD-3-Clause](http://opensource.org/licenses/BSD-3-Clause) license, the [LGPL-2.1](http://opensource.org/licenses/LGPL-2.1), or the [GPL-2.0](http://opensource.org/licenses/GPL-2.0).
+3. Validates English translation hacks as main ROMs for machines that do not have English translations.
+- Valkyrie No Densetsu
 
 License
 =======
