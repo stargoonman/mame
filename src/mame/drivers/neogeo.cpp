@@ -2855,11 +2855,8 @@ void mvs_led_state::mslug2t(machine_config &config)
 {
 	neobase(config);
     
-    MCFG_DEVICE_MODIFY("maincpu")
-	MCFG_DEVICE_CLOCK(NEOGEO_MAIN_CPU_CLOCK * 2)
-
-	MCFG_DEVICE_MODIFY("audiocpu")
-	MCFG_DEVICE_CLOCK(NEOGEO_AUDIO_CPU_CLOCK * 2)
+    m_maincpu->set_clock(NEOGEO_MAIN_CPU_CLOCK * 2);
+    m_audiocpu->set_clock(NEOGEO_AUDIO_CPU_CLOCK * 2);
 }
 
 /*************************************
