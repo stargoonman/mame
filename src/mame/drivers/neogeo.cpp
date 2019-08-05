@@ -4946,7 +4946,7 @@ ROM_START( viewpoinp ) // crashes during stage 4 on real hardware (but stage 5 c
 	ROM_LOAD32_BYTE( "c3", 0x000001, 0x080000, CRC(b017d2d1) SHA1(160bd4f3f4c09a244a9cfdd076f37299ec0ae4d5) )
 	ROM_LOAD32_BYTE( "c4", 0x000003, 0x080000, CRC(10f1624a) SHA1(762fd106886c7f13cb29c97c3a3af9fbd6b30405) )
 	ROM_LOAD32_BYTE( "c5", 0x200000, 0x080000, CRC(714a8bc4) SHA1(5f69a7e6acaf6916d76f3de6465a5b548d90af68) )
-	ROM_LOAD32_BYTE( "c6", 0x200002, 0x080000, CRC(5bc32495) SHA1(d9e2635de3fe60d4adcc11d4acde2d613808c0b8) ) 
+	ROM_LOAD32_BYTE( "c6", 0x200002, 0x080000, CRC(5bc32495) SHA1(d9e2635de3fe60d4adcc11d4acde2d613808c0b8) )
 	ROM_LOAD32_BYTE( "c7", 0x200001, 0x080000, CRC(28a0a127) SHA1(488fa8acd474cd357e3d18043341bc7b5a1a654e) )
 	ROM_LOAD32_BYTE( "c8", 0x200003, 0x080000, CRC(439c9036) SHA1(7a5b965ceab9343ece3b6d02cc6dbfc83ec67f04) )
 ROM_END
@@ -11893,7 +11893,7 @@ GAME( 1993, wh2h,       wh2,      neobase,   neogeo,    mvs_led_state, empty_ini
 GAME( 1994, wh2j,       neogeo,   neobase,   neogeo,    mvs_led_state, empty_init, ROT0, "ADK / SNK",        "World Heroes 2 Jet (ADM-007 ~ ADH-007)", MACHINE_SUPPORTS_SAVE )
 GAME( 1994, aodk,       neogeo,   neobase,   neogeo,    mvs_led_state, empty_init, ROT0, "ADK / SNK",        "Aggressors of Dark Kombat / Tsuukai GANGAN Koushinkyoku (ADM-008 ~ ADH-008)", MACHINE_SUPPORTS_SAVE )
 GAME( 1995, whp,        neogeo,   neobase,   neogeo,    mvs_led_state, empty_init, ROT0, "ADK / SNK",        "World Heroes Perfect", MACHINE_SUPPORTS_SAVE )
-GAME( 1995, moshougi,   neogeo,   neobase,   neogeo,    mvs_led_state, empty_init, ROT0, "ADK / SNK",        "Shougi No Tatsujin - Master of Shougi", MACHINE_SUPPORTS_SAVE )
+GAME( 1995, moshougi,   neogeo,   neobase,   neogeo,    mvs_led_state, empty_init, ROT0, "ADK / SNK",        "Shougi no Tatsujin - Master of Shougi", MACHINE_SUPPORTS_SAVE )
 GAME( 1996, overtop,    neogeo,   neobase,   neogeo,    mvs_led_state, empty_init, ROT0, "ADK",              "Over Top", MACHINE_SUPPORTS_SAVE )
 GAME( 1996, ninjamas,   neogeo,   neobase,   neogeo,    mvs_led_state, empty_init, ROT0, "ADK / SNK",        "Ninja Master's - Haoh-ninpo-cho", MACHINE_SUPPORTS_SAVE )
 GAME( 1996, twinspri,   neogeo,   neobase,   neogeo,    mvs_led_state, empty_init, ROT0, "ADK / SNK",        "Twinkle Star Sprites", MACHINE_SUPPORTS_SAVE )

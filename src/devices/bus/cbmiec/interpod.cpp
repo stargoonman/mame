@@ -70,7 +70,7 @@ Notes:
 #define R6532_TAG       "u3"
 #define R6522_TAG       "u4"
 #define MC6850_TAG      "u5"
-#define RS232_TAG		"rs232"
+#define RS232_TAG       "rs232"
 
 
 //**************************************************************************
@@ -119,7 +119,7 @@ void interpod_t::interpod_mem(address_map &map)
 	map(0x0400, 0x041f).mirror(0x3be0).m(R6532_TAG, FUNC(mos6532_new_device::io_map));
 	map(0x2000, 0x2001).mirror(0x9ffe).rw(MC6850_TAG, FUNC(acia6850_device::read), FUNC(acia6850_device::write));
 	map(0x4000, 0x47ff).mirror(0xb800).rom().region(R6502_TAG, 0);
-	map(0x8000, 0x800f).mirror(0x5ff0).rw(R6522_TAG, FUNC(via6522_device::read), FUNC(via6522_device::write));
+	map(0x8000, 0x800f).mirror(0x5ff0).m(R6522_TAG, FUNC(via6522_device::map));
 }
 
 
@@ -135,7 +135,7 @@ void interpod_t::device_add_mconfig(machine_config &config)
 	VIA6522(config, m_via, 1000000);
 
 	MOS6532_NEW(config, m_riot, 1000000);
-	
+
 	ACIA6850(config, m_acia, 0);
 
 	ieee488_device::add_cbm_devices(config, nullptr);

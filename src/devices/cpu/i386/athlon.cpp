@@ -389,6 +389,7 @@ uint16_t athlonxp_device::READ16PL(uint32_t ea, uint8_t privilege)
 	switch (ea & 3)
 	{
 	case 0:
+	default:
 		if(!translate_address(privilege,TRANSLATE_READ,&address,&error))
 			PF_THROW(error);
 
@@ -429,6 +430,7 @@ uint32_t athlonxp_device::READ32PL(uint32_t ea, uint8_t privilege)
 	switch (ea & 3)
 	{
 	case 0:
+	default:
 		if(!translate_address(privilege,TRANSLATE_READ,&address,&error))
 			PF_THROW(error);
 
@@ -473,6 +475,7 @@ uint64_t athlonxp_device::READ64PL(uint32_t ea, uint8_t privilege)
 	switch (ea & 3)
 	{
 	case 0:
+	default:
 		value = READ32PL(ea, privilege);
 		value |= uint64_t(READ32PL(ea + 2, privilege)) << 32;
 		break;
@@ -841,10 +844,10 @@ uint64_t athlonxp_device::opcode_rdmsr(bool &valid_msr)
 			/* Access to the ASeg (a0000-bffff) depends on bit 0 of smm_mask
 			   if the bit is 0 use the associated fixed mtrr
 			   if the bit is 1
-				   if smm is active
-					   access goes to dram (wrmem 1 rdmem 1)
-				   if smm not active
-					   access goes to mmio (wrmem 0 rdmem 0) */
+			       if smm is active
+			           access goes to dram (wrmem 1 rdmem 1)
+			       if smm not active
+			           access goes to mmio (wrmem 0 rdmem 0) */
 			ret = m_msr_smm_mask;
 			break;
 	}
