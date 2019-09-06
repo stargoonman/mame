@@ -2531,7 +2531,7 @@ static INPUT_PORTS_START( naomi_mp )
 	PORT_INCLUDE( naomi_debug )
 
 	PORT_START("OUTPUT")
-	PORT_BIT( 0xff, IP_ACTIVE_HIGH, IPT_OUTPUT) PORT_CHANGED_MEMBER(DEVICE_SELF, naomi_state,naomi_mp_w, nullptr)
+	PORT_BIT( 0xff, IP_ACTIVE_HIGH, IPT_OUTPUT) PORT_CHANGED_MEMBER(DEVICE_SELF, naomi_state,naomi_mp_w, 0)
 
 	PORT_START("P1")
 	PORT_BIT( 0xff00, IP_ACTIVE_HIGH, IPT_CUSTOM )  PORT_CUSTOM_MEMBER(DEVICE_SELF, naomi_state,naomi_mp_r, "KEY1\0KEY2\0KEY3\0KEY4\0KEY5")
@@ -11250,6 +11250,7 @@ ROM_END
 // 01xx Mushiking 2K3 1ST (Japan)
 // 01xx Mushiking 2K4 1ST (Japan)
 // 01xx Mushiking 2K5 2ND (Japan)
+// 0xxx Nittere Shiki! Mirai Yosou Studio
 // 0xxx Star Horse 2001 (main screens, server)
 // 0xxx Star Horse 2002 (whole set)
 // 0xxx Star Horse Progress Returns (main screens, server)

@@ -25,7 +25,7 @@ TODO:
   electronically. For the ones that weren't decapped, they were read by
   playing back all melody data and reconstructing it to ROM. Visual(decap)
   verification is wanted for: gnw_bfight, gnw_bjack, gnw_bsweep, gnw_climber,
-  gnw_dkjrp, gnw_gcliff, gnw_sbuster, gnw_zelda
+  gnw_dkjrp, gnw_gcliff, gnw_mbaway, gnw_sbuster, gnw_zelda
 
 ****************************************************************************
 
@@ -44,12 +44,12 @@ Game list (* denotes not emulated yet)
 Serial  Series MCU     Title
 ---------------------------------------------
 AC-01     s    SM5A    Ball (aka Toss-Up)
-FL-02*    s    SM5A?   Flagman
-MT-03*    s    SM5A?   Vermin (aka The Exterminator)
+FL-02     s    SM5A    Flagman
+MT-03     s    SM5A    Vermin (aka The Exterminator)
 RC-04*    s    SM5A?   Fire (aka Fireman Fireman)
 IP-05*    s    SM5A?   Judge
 MN-06*    g    SM5A?   Manhole
-CN-07*    g    SM5A?   Helmet (aka Headache)
+CN-07     g    SM5A    Helmet (aka Headache)
 LN-08*    g    SM5A?   Lion
 PR-21     ws   SM5A    Parachute
 OC-22     ws   SM5A    Octopus
@@ -83,7 +83,7 @@ PG-74*    tt   SM511?  Popeye
 SM-91*    p    SM511?  Snoopy (assume same ROM & LCD as tabletop version)
 PG-92*    p    SM511?  Popeye          "
 CJ-93     p    SM511   Donkey Kong Jr. "
-PB-94*    p    SM511?  Mario's Bombs Away
+TB-94     p    SM511   Mario's Bombs Away
 DC-95*    p    SM511?  Mickey Mouse
 MK-96*    p    SM511?  Donkey Kong Circus (same ROM as DC-95? LCD is different)
 DJ-101    nws  SM510   Donkey Kong Jr.
@@ -339,7 +339,7 @@ WRITE8_MEMBER(hh_sm510_state::piezo2bit_input_w)
 namespace {
 
 #define PORT_CHANGED_CB(x) \
-	PORT_CHANGED_MEMBER(DEVICE_SELF, hh_sm510_state, x, nullptr)
+	PORT_CHANGED_MEMBER(DEVICE_SELF, hh_sm510_state, x, 0)
 
 /***************************************************************************
 
@@ -1297,6 +1297,257 @@ ROM_END
 
 /***************************************************************************
 
+  Nintendo Game & Watch: Flagman (model FL-02)
+  * PCB label FL-02
+  * Sharp SM5A label FL-02 2005 (no decap)
+  * lcd screen with custom segments, 1-bit sound
+
+  In the USA, it was distributed as Flag Man by Mego under their Time-Out series.
+
+***************************************************************************/
+
+class gnw_flagman_state : public hh_sm510_state
+{
+public:
+	gnw_flagman_state(const machine_config &mconfig, device_type type, const char *tag) :
+		hh_sm510_state(mconfig, type, tag)
+	{ }
+
+	void gnw_flagman(machine_config &config);
+};
+
+// config
+
+static INPUT_PORTS_START( gnw_flagman )
+	PORT_START("IN.0") // R2
+	PORT_BIT( 0x0f, IP_ACTIVE_HIGH, IPT_UNUSED )
+
+	PORT_START("IN.1") // R3
+	PORT_BIT( 0x01, IP_ACTIVE_HIGH, IPT_JOYSTICKLEFT_UP ) PORT_CHANGED_CB(input_changed) PORT_16WAY PORT_NAME("1") // 1
+	PORT_BIT( 0x02, IP_ACTIVE_HIGH, IPT_JOYSTICKRIGHT_UP ) PORT_CHANGED_CB(input_changed) PORT_16WAY PORT_NAME("2") // 2
+	PORT_BIT( 0x04, IP_ACTIVE_HIGH, IPT_JOYSTICKLEFT_DOWN ) PORT_CHANGED_CB(input_changed) PORT_16WAY PORT_NAME("3") // 3
+	PORT_BIT( 0x08, IP_ACTIVE_HIGH, IPT_JOYSTICKRIGHT_DOWN ) PORT_CHANGED_CB(input_changed) PORT_16WAY PORT_NAME("4") // 4
+
+	PORT_START("IN.2") // R4
+	PORT_BIT( 0x01, IP_ACTIVE_HIGH, IPT_SELECT ) PORT_CHANGED_CB(input_changed) PORT_NAME("Time")
+	PORT_BIT( 0x02, IP_ACTIVE_HIGH, IPT_START2 ) PORT_CHANGED_CB(input_changed) PORT_NAME("Game B")
+	PORT_BIT( 0x04, IP_ACTIVE_HIGH, IPT_START1 ) PORT_CHANGED_CB(input_changed) PORT_NAME("Game A")
+	PORT_BIT( 0x08, IP_ACTIVE_HIGH, IPT_UNUSED )
+
+	PORT_START("B")
+	PORT_BIT( 0x01, IP_ACTIVE_LOW, IPT_UNUSED ) // display test?
+
+	PORT_START("ACL")
+	PORT_BIT( 0x01, IP_ACTIVE_HIGH, IPT_SERVICE1 ) PORT_CHANGED_CB(acl_button) PORT_NAME("ACL")
+INPUT_PORTS_END
+
+void gnw_flagman_state::gnw_flagman(machine_config &config)
+{
+	/* basic machine hardware */
+	SM5A(config, m_maincpu);
+	m_maincpu->set_r_mask_option(sm510_base_device::RMASK_DIRECT); // confirmed
+	m_maincpu->write_segs().set(FUNC(hh_sm510_state::sm500_lcd_segment_w));
+	m_maincpu->read_k().set(FUNC(hh_sm510_state::input_r));
+	m_maincpu->write_r().set(FUNC(hh_sm510_state::piezo_input_w));
+	m_maincpu->read_b().set_ioport("B");
+
+	/* video hardware */
+	screen_device &screen(SCREEN(config, "screen", SCREEN_TYPE_SVG));
+	screen.set_refresh_hz(60);
+	screen.set_size(1511, 1080);
+	screen.set_visarea_full();
+
+	/* sound hardware */
+	SPEAKER(config, "mono").front_center();
+	SPEAKER_SOUND(config, m_speaker);
+	m_speaker->add_route(ALL_OUTPUTS, "mono", 0.25);
+}
+
+// roms
+
+ROM_START( gnw_flagman )
+	ROM_REGION( 0x1000, "maincpu", 0 )
+	ROM_LOAD( "fl-02", 0x0000, 0x0740, CRC(cc7a99e4) SHA1(d03d9a6b278bc11df7839708831241b5fa805f69) )
+
+	ROM_REGION( 55994, "screen", 0)
+	ROM_LOAD( "gnw_flagman.svg", 0, 55994, CRC(7ab91965) SHA1(a78b8b28b6849fea6a216c4b549c90e8cf1602fe) )
+ROM_END
+
+
+
+
+
+/***************************************************************************
+
+  Nintendo Game & Watch: Vermin (model MT-03)
+  * PCB label MT-03
+  * Sharp SM5A label MT-03 5012 (no decap)
+  * lcd screen with custom segments, 1-bit sound
+
+  In the USA, it was distributed as The Exterminator by Mego under their Time-Out series.
+
+***************************************************************************/
+
+class gnw_vermin_state : public hh_sm510_state
+{
+public:
+	gnw_vermin_state(const machine_config &mconfig, device_type type, const char *tag) :
+		hh_sm510_state(mconfig, type, tag)
+	{
+		inp_fixed_last();
+	}
+
+	void gnw_vermin(machine_config &config);
+};
+
+// config
+
+static INPUT_PORTS_START( gnw_vermin )
+	PORT_START("IN.0")
+	PORT_BIT( 0x01, IP_ACTIVE_HIGH, IPT_SELECT ) PORT_CHANGED_CB(input_changed) PORT_NAME("Time")
+	PORT_BIT( 0x02, IP_ACTIVE_HIGH, IPT_START2 ) PORT_CHANGED_CB(input_changed) PORT_NAME("Game B")
+	PORT_BIT( 0x04, IP_ACTIVE_HIGH, IPT_START1 ) PORT_CHANGED_CB(input_changed) PORT_NAME("Game A")
+	PORT_CONFNAME( 0x08, 0x00, "Infinite Lives (Cheat)") // factory test, unpopulated on PCB -- disable after boot
+	PORT_CONFSETTING(    0x00, DEF_STR( Off ) )
+	PORT_CONFSETTING(    0x08, DEF_STR( On ) )
+
+	PORT_START("BA")
+	PORT_BIT( 0x01, IP_ACTIVE_LOW, IPT_JOYSTICK_RIGHT ) PORT_CHANGED_CB(input_changed) PORT_16WAY
+
+	PORT_START("B")
+	PORT_BIT( 0x01, IP_ACTIVE_LOW, IPT_JOYSTICK_LEFT ) PORT_CHANGED_CB(input_changed) PORT_16WAY
+
+	PORT_START("ACL")
+	PORT_BIT( 0x01, IP_ACTIVE_HIGH, IPT_SERVICE1 ) PORT_CHANGED_CB(acl_button) PORT_NAME("ACL")
+INPUT_PORTS_END
+
+void gnw_vermin_state::gnw_vermin(machine_config &config)
+{
+	/* basic machine hardware */
+	SM5A(config, m_maincpu);
+	m_maincpu->set_r_mask_option(sm510_base_device::RMASK_DIRECT); // confirmed
+	m_maincpu->write_segs().set(FUNC(hh_sm510_state::sm500_lcd_segment_w));
+	m_maincpu->read_k().set(FUNC(hh_sm510_state::input_r));
+	m_maincpu->write_r().set(FUNC(hh_sm510_state::piezo_r1_w));
+	m_maincpu->read_ba().set_ioport("BA");
+	m_maincpu->read_b().set_ioport("B");
+
+	/* video hardware */
+	screen_device &screen(SCREEN(config, "screen", SCREEN_TYPE_SVG));
+	screen.set_refresh_hz(60);
+	screen.set_size(1650, 1080);
+	screen.set_visarea_full();
+
+	/* sound hardware */
+	SPEAKER(config, "mono").front_center();
+	SPEAKER_SOUND(config, m_speaker);
+	m_speaker->add_route(ALL_OUTPUTS, "mono", 0.25);
+}
+
+// roms
+
+ROM_START( gnw_vermin )
+	ROM_REGION( 0x1000, "maincpu", 0 )
+	ROM_LOAD( "mt-03", 0x0000, 0x0740, CRC(f8493177) SHA1(d629432ef8e9fbd7bbdc3fbeb45d9bd70d9d571b) )
+
+	ROM_REGION( 105437, "screen", 0)
+	ROM_LOAD( "gnw_vermin.svg", 0, 105437, CRC(c0fc6c40) SHA1(fc64292185aa3d0c92ddfce9227722a17aa5d43f) )
+ROM_END
+
+
+
+
+
+/***************************************************************************
+
+  Nintendo Game & Watch: Helmet (model CN-07)
+  * PCB label CN-07
+  * Sharp SM5A label CN-17 21ZA (no decap)
+  * lcd screen with custom segments, 1-bit sound
+
+  In the UK, it was distributed as Headache by CGL.
+
+***************************************************************************/
+
+class gnw_helmet_state : public hh_sm510_state
+{
+public:
+	gnw_helmet_state(const machine_config &mconfig, device_type type, const char *tag) :
+		hh_sm510_state(mconfig, type, tag)
+	{ }
+
+	void gnw_helmet(machine_config &config);
+};
+
+// config
+
+static INPUT_PORTS_START( gnw_helmet )
+	PORT_START("IN.0") // R2
+	PORT_BIT( 0x0f, IP_ACTIVE_HIGH, IPT_UNUSED )
+
+	PORT_START("IN.1") // R3
+	PORT_CONFNAME( 0x01, 0x00, "Invincibility (Cheat)") // factory test, unpopulated on PCB -- disable after boot
+	PORT_CONFSETTING(    0x00, DEF_STR( Off ) )
+	PORT_CONFSETTING(    0x01, DEF_STR( On ) )
+	PORT_BIT( 0x02, IP_ACTIVE_HIGH, IPT_UNUSED ) // same as 0x01?
+	PORT_BIT( 0x04, IP_ACTIVE_HIGH, IPT_UNUSED ) // "
+	PORT_BIT( 0x08, IP_ACTIVE_HIGH, IPT_UNUSED ) // alarm test?
+
+	PORT_START("IN.2") // R4
+	PORT_BIT( 0x01, IP_ACTIVE_HIGH, IPT_SELECT ) PORT_CHANGED_CB(input_changed) PORT_NAME("Time")
+	PORT_BIT( 0x02, IP_ACTIVE_HIGH, IPT_START2 ) PORT_CHANGED_CB(input_changed) PORT_NAME("Game B")
+	PORT_BIT( 0x04, IP_ACTIVE_HIGH, IPT_START1 ) PORT_CHANGED_CB(input_changed) PORT_NAME("Game A")
+	PORT_BIT( 0x08, IP_ACTIVE_HIGH, IPT_SERVICE2 ) PORT_CHANGED_CB(input_changed) PORT_NAME("Alarm")
+
+	PORT_START("BA")
+	PORT_BIT( 0x01, IP_ACTIVE_LOW, IPT_JOYSTICK_RIGHT ) PORT_CHANGED_CB(input_changed) PORT_16WAY
+
+	PORT_START("B")
+	PORT_BIT( 0x01, IP_ACTIVE_LOW, IPT_JOYSTICK_LEFT ) PORT_CHANGED_CB(input_changed) PORT_16WAY
+
+	PORT_START("ACL")
+	PORT_BIT( 0x01, IP_ACTIVE_HIGH, IPT_SERVICE1 ) PORT_CHANGED_CB(acl_button) PORT_NAME("ACL")
+INPUT_PORTS_END
+
+void gnw_helmet_state::gnw_helmet(machine_config &config)
+{
+	/* basic machine hardware */
+	SM5A(config, m_maincpu);
+	m_maincpu->set_r_mask_option(sm510_base_device::RMASK_DIRECT); // confirmed
+	m_maincpu->write_segs().set(FUNC(hh_sm510_state::sm500_lcd_segment_w));
+	m_maincpu->read_k().set(FUNC(hh_sm510_state::input_r));
+	m_maincpu->write_r().set(FUNC(hh_sm510_state::piezo_input_w));
+	m_maincpu->read_ba().set_ioport("BA");
+	m_maincpu->read_b().set_ioport("B");
+
+	/* video hardware */
+	screen_device &screen(SCREEN(config, "screen", SCREEN_TYPE_SVG));
+	screen.set_refresh_hz(60);
+	screen.set_size(1657, 1080);
+	screen.set_visarea_full();
+
+	/* sound hardware */
+	SPEAKER(config, "mono").front_center();
+	SPEAKER_SOUND(config, m_speaker);
+	m_speaker->add_route(ALL_OUTPUTS, "mono", 0.25);
+}
+
+// roms
+
+ROM_START( gnw_helmet )
+	ROM_REGION( 0x1000, "maincpu", 0 )
+	ROM_LOAD( "cn-07", 0x0000, 0x0740, CRC(6d251e2e) SHA1(c61f591514de36fb2270038a6505945564c9f90e) )
+
+	ROM_REGION( 109241, "screen", 0)
+	ROM_LOAD( "gnw_helmet.svg", 0, 109241, CRC(fa8294a3) SHA1(05b734ac0126d3bffe160a23753a0a7e6f82996e) )
+ROM_END
+
+
+
+
+
+/***************************************************************************
+
   Nintendo Game & Watch: Parachute (model PR-21)
   * PCB label PR-21Y
   * Sharp SM5A label PR-21 52XC (no decap)
@@ -1387,6 +1638,9 @@ ROM_END
   * PCB label OC-22Y A
   * Sharp SM5A label OC-22 204A (no decap)
   * lcd screen with custom segments, 1-bit sound
+
+  Also cloned in 1989 by Elektronika(USSR) as Тайны океана (Tayny okeana),
+  it is close to identical, graphics as well.
 
 ***************************************************************************/
 
@@ -1562,8 +1816,9 @@ ROM_END
   * Sharp SM5A label FP-24 51YB (die label CMS646, ROM ID 74)
   * lcd screen with custom segments, 1-bit sound
 
-  In 1989, Elektronika(USSR) released a clone: Merry Cook. This game shares
-  the same ROM, though the graphics are slightly different.
+  In 1989, Elektronika(USSR) released a clone: Весёлый повар (Vesolyy povar,
+  export version: Merry Cook). This game shares the same ROM, though the graphics
+  are slightly different.
 
 ***************************************************************************/
 
@@ -1670,17 +1925,18 @@ ROM_END
 /***************************************************************************
 
   Nintendo Game & Watch: Mickey Mouse (model MC-25), Egg (model EG-26)
-  * Sharp SM5A label ?
+  * PCB label MC-25 EG-26 (yes, both listed)
+  * Sharp SM5A label MC-25 51YD / ?
   * lcd screen with custom segments, 1-bit sound
 
   MC-25 and EG-26 are the same game, it's assumed that the latter was for
   regions where Nintendo wasn't able to license from Disney.
 
-  In 1984, Elektronika(USSR) released a clone: Nu, pogodi! This was followed
-  by several other titles that were the same under the hood, only differing
-  in graphics. They also made a slightly modified version, adding a new game
-  mode (by pressing A+B) where the player/CPU roles are reversed. This version
-  is known as Razvedciki kosmosa (export version: Explorers of Space).
+  In 1984, Elektronika(USSR) released a clone: Ну, погоди! (Nu, pogodi!). This was
+  followed by several other titles that were the same under the hood, only differing
+  in graphics. They also made a slightly modified version, adding a new game mode
+  (by pressing A+B) where the player/CPU roles are reversed. This version is known as
+  Разведчики космоса (Razvedchiki kosmosa, export version: Explorers of Space).
 
 ***************************************************************************/
 
@@ -1837,7 +2093,10 @@ ROM_END
   * lcd screen with custom segments, 1-bit sound
 
   This is the wide screen version, there's also a silver version.
-  Also copied by Elektronika as "Space Bridge", with different LCD.
+
+  In 1989 Elektronika(USSR) released a clone: Космический мост (Kosmicheskiy most,
+  export version: Space Bridge). This game shares the same ROM, though the
+  graphics are different.
 
 ***************************************************************************/
 
@@ -1848,6 +2107,7 @@ public:
 		hh_sm510_state(mconfig, type, tag)
 	{ }
 
+	void spacebridge(machine_config &config);
 	void gnw_fire(machine_config &config);
 };
 
@@ -1904,6 +2164,25 @@ void gnw_fire_state::gnw_fire(machine_config &config)
 	m_speaker->add_route(ALL_OUTPUTS, "mono", 0.25);
 }
 
+void gnw_fire_state::spacebridge(machine_config & config)
+{
+	gnw_fire(config);
+
+	/* basic machine hardware */
+	KB1013VK12(config.replace(), m_maincpu);
+	m_maincpu->set_r_mask_option(sm510_base_device::RMASK_DIRECT); // confirmed
+	m_maincpu->write_segs().set(FUNC(hh_sm510_state::sm500_lcd_segment_w));
+	m_maincpu->read_k().set(FUNC(hh_sm510_state::input_r));
+	m_maincpu->write_r().set(FUNC(hh_sm510_state::piezo_input_w));
+	m_maincpu->read_ba().set_ioport("BA");
+	m_maincpu->read_b().set_ioport("B");
+
+	/* video hardware */
+	screen_device *screen = subdevice<screen_device>("screen");
+	screen->set_size(1673, 1080);
+	screen->set_visarea_full();
+}
+
 // roms
 
 ROM_START( gnw_fire )
@@ -1912,6 +2191,14 @@ ROM_START( gnw_fire )
 
 	ROM_REGION( 163753, "screen", 0)
 	ROM_LOAD( "gnw_fire.svg", 0, 163753, CRC(d546fa42) SHA1(492c785aa0ed33ff1ac8c84066e5b6d7cb7d1566) )
+ROM_END
+
+ROM_START( spacebridge )
+	ROM_REGION( 0x1000, "maincpu", 0 )
+	ROM_LOAD( "spacebridge.bin", 0x0000, 0x0740, CRC(f4c53ef0) SHA1(6b57120a0f9d2fd4dcd65ad57a5f32def71d905f) )
+
+	ROM_REGION( 124408, "screen", 0)
+	ROM_LOAD( "spacebridge.svg", 0, 124408, CRC(4d1c770a) SHA1(ba9c88f2a6e65e60bed692eaea3c6be4142ecf93) )
 ROM_END
 
 
@@ -3530,7 +3817,7 @@ ROM_END
   Nintendo Game & Watch: Donkey Kong Jr. (model CJ-93)
   * PCB labels: CJ-93 M (main board), CJ-93C (controller board)
   * Sharp SM511 label CJ-93 539D (no decap)
-  * lcd screen with custom segments, 1-bit sound
+  * inverted lcd screen with custom segments, 1-bit sound
 
   This is the panorama version. There's also a tabletop version which is
   assumed to use the same ROM/LCD, and a new wide screen version which is
@@ -3613,10 +3900,98 @@ ROM_START( gnw_dkjrp )
 	ROM_LOAD( "cj-93.program", 0x0000, 0x1000, CRC(a2cd5a91) SHA1(33f6fd1530e5522491851f16d7c9f928b2dbdc3b) )
 
 	ROM_REGION( 0x100, "maincpu:melody", 0 )
-	ROM_LOAD( "cj-93.melody", 0x000, 0x100, BAD_DUMP CRC(99fbf76a) SHA1(15ba1af51bebc316146eb9a0a3d58d28f644d45f) )
+	ROM_LOAD( "cj-93.melody", 0x000, 0x100, BAD_DUMP CRC(99fbf76a) SHA1(15ba1af51bebc316146eb9a0a3d58d28f644d45f) ) // decap needed for verification
 
 	ROM_REGION( 340751, "screen", 0)
 	ROM_LOAD( "gnw_dkjrp.svg", 0, 340751, CRC(eb3cb98b) SHA1(5b148557d3ade2e2050ddde879a6cc05e119b446) )
+ROM_END
+
+
+
+
+
+/***************************************************************************
+
+  Nintendo Game & Watch: Mario's Bombs Away (model TB-94)
+  * PCB labels: TB-94 M (main board), SM-91C (controller board)
+  * Sharp SM511 label TB-94 537C (no decap)
+  * inverted lcd screen with custom segments, 1-bit sound
+
+***************************************************************************/
+
+class gnw_mbaway_state : public hh_sm510_state
+{
+public:
+	gnw_mbaway_state(const machine_config &mconfig, device_type type, const char *tag) :
+		hh_sm510_state(mconfig, type, tag)
+	{ }
+
+	void gnw_mbaway(machine_config &config);
+};
+
+// config
+
+static INPUT_PORTS_START( gnw_mbaway )
+	PORT_START("IN.0") // S1
+	PORT_BIT( 0x01, IP_ACTIVE_HIGH, IPT_BUTTON1 ) PORT_CHANGED_CB(input_changed) // Up/Down
+	PORT_BIT( 0x02, IP_ACTIVE_HIGH, IPT_JOYSTICK_RIGHT ) PORT_CHANGED_CB(input_changed)
+	PORT_BIT( 0x04, IP_ACTIVE_HIGH, IPT_JOYSTICK_LEFT ) PORT_CHANGED_CB(input_changed)
+	PORT_BIT( 0x08, IP_ACTIVE_HIGH, IPT_UNUSED )
+
+	PORT_START("IN.1") // S2
+	PORT_BIT( 0x01, IP_ACTIVE_HIGH, IPT_SELECT ) PORT_CHANGED_CB(input_changed) PORT_NAME("Time")
+	PORT_BIT( 0x02, IP_ACTIVE_HIGH, IPT_START2 ) PORT_CHANGED_CB(input_changed) PORT_NAME("Game B")
+	PORT_BIT( 0x04, IP_ACTIVE_HIGH, IPT_START1 ) PORT_CHANGED_CB(input_changed) PORT_NAME("Game A")
+	PORT_BIT( 0x08, IP_ACTIVE_HIGH, IPT_SERVICE2 ) PORT_CHANGED_CB(input_changed) PORT_NAME("Alarm")
+
+	PORT_START("ACL")
+	PORT_BIT( 0x01, IP_ACTIVE_HIGH, IPT_SERVICE1 ) PORT_CHANGED_CB(acl_button) PORT_NAME("ACL")
+
+	PORT_START("BA")
+	PORT_CONFNAME( 0x01, 0x01, "Invincibility (Cheat)") // factory test, unpopulated on PCB
+	PORT_CONFSETTING(    0x01, DEF_STR( Off ) )
+	PORT_CONFSETTING(    0x00, DEF_STR( On ) )
+
+	PORT_START("B")
+	PORT_CONFNAME( 0x01, 0x01, "Infinite Lives (Cheat)") // "
+	PORT_CONFSETTING(    0x01, DEF_STR( Off ) )
+	PORT_CONFSETTING(    0x00, DEF_STR( On ) )
+INPUT_PORTS_END
+
+void gnw_mbaway_state::gnw_mbaway(machine_config &config)
+{
+	/* basic machine hardware */
+	SM511(config, m_maincpu);
+	m_maincpu->write_segs().set(FUNC(hh_sm510_state::sm510_lcd_segment_w));
+	m_maincpu->read_k().set(FUNC(hh_sm510_state::input_r));
+	m_maincpu->write_s().set(FUNC(hh_sm510_state::input_w));
+	m_maincpu->write_r().set(FUNC(hh_sm510_state::piezo_r1_w));
+	m_maincpu->read_ba().set_ioport("BA");
+	m_maincpu->read_b().set_ioport("B");
+
+	/* video hardware */
+	screen_device &screen(SCREEN(config, "screen", SCREEN_TYPE_SVG));
+	screen.set_refresh_hz(60);
+	screen.set_size(1920, 1031);
+	screen.set_visarea_full();
+
+	/* sound hardware */
+	SPEAKER(config, "mono").front_center();
+	SPEAKER_SOUND(config, m_speaker);
+	m_speaker->add_route(ALL_OUTPUTS, "mono", 0.25);
+}
+
+// roms
+
+ROM_START( gnw_mbaway )
+	ROM_REGION( 0x1000, "maincpu", 0 )
+	ROM_LOAD( "tb-94.program", 0x0000, 0x1000, CRC(11d18a48) SHA1(afccfa19dace7c4fcc15a84ecfcfb9d7ae3861e4) )
+
+	ROM_REGION( 0x100, "maincpu:melody", 0 )
+	ROM_LOAD( "tb-94.melody", 0x000, 0x100, BAD_DUMP CRC(883931c2) SHA1(9ad22bde42a67c42d117f3ffa81a23c3c9044e66) ) // decap needed for verification
+
+	ROM_REGION( 514643, "screen", 0)
+	ROM_LOAD( "gnw_mbaway.svg", 0, 514643, CRC(2ec2f18b) SHA1(8e2fd20615d867aac97e443fb977513ff98138b4) )
 ROM_END
 
 
@@ -9621,7 +9996,10 @@ CONS( 1991, kbucky,      0,          0, kbucky,      kbucky,      kbucky_state, 
 CONS( 1991, kgarfld,     0,          0, kgarfld,     kgarfld,     kgarfld_state,     empty_init, "Konami", "Garfield (handheld)", MACHINE_SUPPORTS_SAVE )
 
 // Nintendo G&W: silver/gold (initial series is uncategorized, "silver" was made up later)
-CONS( 1980, gnw_ball,    0,          0, gnw_ball,    gnw_ball,    gnw_ball_state,    empty_init, "Nintendo", "Game & Watch: Ball", MACHINE_SUPPORTS_SAVE)
+CONS( 1980, gnw_ball,    0,          0, gnw_ball,    gnw_ball,    gnw_ball_state,    empty_init, "Nintendo", "Game & Watch: Ball", MACHINE_SUPPORTS_SAVE )
+CONS( 1980, gnw_flagman, 0,          0, gnw_flagman, gnw_flagman, gnw_flagman_state, empty_init, "Nintendo", "Game & Watch: Flagman", MACHINE_SUPPORTS_SAVE )
+CONS( 1980, gnw_vermin,  0,          0, gnw_vermin,  gnw_vermin,  gnw_vermin_state,  empty_init, "Nintendo", "Game & Watch: Vermin", MACHINE_SUPPORTS_SAVE )
+CONS( 1981, gnw_helmet,  0,          0, gnw_helmet,  gnw_helmet,  gnw_helmet_state,  empty_init, "Nintendo", "Game & Watch: Helmet", MACHINE_SUPPORTS_SAVE )
 
 // Nintendo G&W: wide screen
 CONS( 1981, gnw_pchute,  0,          0, gnw_pchute,  gnw_pchute,  gnw_pchute_state,  empty_init, "Nintendo", "Game & Watch: Parachute", MACHINE_SUPPORTS_SAVE )
@@ -9634,6 +10012,7 @@ CONS( 1981, gnw_egg,     gnw_mmouse, 0, gnw_egg,     gnw_mmouse,  gnw_mmouse_sta
 CONS( 1984, nupogodi,    gnw_mmouse, 0, nupogodi,    gnw_mmouse,  gnw_mmouse_state,  empty_init, "Elektronika", "Nu, pogodi!", MACHINE_SUPPORTS_SAVE )
 CONS( 1989, exospace,    gnw_mmouse, 0, exospace,    exospace,    gnw_mmouse_state,  empty_init, "Elektronika", "Explorers of Space", MACHINE_SUPPORTS_SAVE )
 CONS( 1981, gnw_fire,    0,          0, gnw_fire,    gnw_fire,    gnw_fire_state,    empty_init, "Nintendo", "Game & Watch: Fire (wide screen)", MACHINE_SUPPORTS_SAVE )
+CONS( 1989, spacebridge, gnw_fire,   0, spacebridge, gnw_fire,    gnw_fire_state,    empty_init, "Elektronika", "Space Bridge", MACHINE_SUPPORTS_SAVE )
 CONS( 1982, gnw_tbridge, 0,          0, gnw_tbridge, gnw_tbridge, gnw_tbridge_state, empty_init, "Nintendo", "Game & Watch: Turtle Bridge", MACHINE_SUPPORTS_SAVE )
 CONS( 1982, gnw_fireatk, 0,          0, gnw_fireatk, gnw_fireatk, gnw_fireatk_state, empty_init, "Nintendo", "Game & Watch: Fire Attack", MACHINE_SUPPORTS_SAVE )
 CONS( 1982, gnw_stennis, 0,          0, gnw_stennis, gnw_stennis, gnw_stennis_state, empty_init, "Nintendo", "Game & Watch: Snoopy Tennis", MACHINE_SUPPORTS_SAVE )
@@ -9666,6 +10045,7 @@ CONS( 1988, gnw_bfight,  0,          0, gnw_bfight,  gnw_bfight,  gnw_bfight_sta
 
 // Nintendo G&W: table top / panorama screen
 CONS( 1983, gnw_dkjrp,   0,          0, gnw_dkjrp,   gnw_dkjrp,   gnw_dkjrp_state,   empty_init, "Nintendo", "Game & Watch: Donkey Kong Jr. (panorama screen)", MACHINE_SUPPORTS_SAVE )
+CONS( 1983, gnw_mbaway,  0,          0, gnw_mbaway,  gnw_mbaway,  gnw_mbaway_state,  empty_init, "Nintendo", "Game & Watch: Mario's Bombs Away", MACHINE_SUPPORTS_SAVE )
 
 // Nintendo G&W: micro vs. system (actually, no official Game & Watch logo anywhere)
 CONS( 1984, gnw_boxing,  0,          0, gnw_boxing,  gnw_boxing,  gnw_boxing_state,  empty_init, "Nintendo", "Micro Vs. System: Boxing", MACHINE_SUPPORTS_SAVE )
