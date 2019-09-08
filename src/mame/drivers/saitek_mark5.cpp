@@ -13,6 +13,9 @@ by Nick Toop. These credits are in the ROM data.
 Mark VI/Philidor was released a year later, it was a plug-in module for the Mark V.
 It's not much stronger than Mark V(retroactively called Mark V/Travemunde).
 
+When using the MAME sensorboard interface with MK VI, reset the board by pressing
+CLEAR before RESET, needed on 1st power-on or when starting a new game. 
+
 Hardware notes:
 - SY6502A @ ~2MHz (19.6608MHz XTAL, bunch of 74113 dividers)
 - 16KB RAM (8*HM4716AP-4N)
@@ -34,7 +37,6 @@ was the Chess Champion Sensory Board. A piece-recognition chessboard was also
 announced but not released. Maybe it existed as prototype, see patent GB2103943A.
 
 TODO:
-- WIP
 - /2 CPU divider when accessing 0x5000 (the nvram)
 - reading from 0x4400 will write to the LCD too, open bus? it wouldn't make
   sense to use it (and as expected, it never is used)
@@ -56,8 +58,8 @@ TODO:
 #include "speaker.h"
 
 // internal artwork
-//#include "saitek_mark5.lh" // clickable
-//#include "saitek_mark6.lh" // clickable
+#include "saitek_mark5.lh" // clickable
+#include "saitek_mark6.lh" // clickable
 
 
 namespace {
@@ -433,7 +435,7 @@ void mark5_state::mark5(machine_config &config)
 	screen.set_size(942, 1080);
 	screen.set_visarea_full();
 
-	//config.set_default_layout(layout_saitek_mark5);
+	config.set_default_layout(layout_saitek_mark5);
 
 	/* sound hardware */
 	SPEAKER(config, "speaker").front_center();
@@ -454,7 +456,7 @@ void mark5_state::mark6(machine_config &config)
 
 	PWM_DISPLAY(config, m_display[3]).set_size(8, 8);
 	m_display[3]->set_bri_levels(0.001);
-	//config.set_default_layout(layout_saitek_mark6);
+	config.set_default_layout(layout_saitek_mark6);
 }
 
 
@@ -497,5 +499,5 @@ ROM_END
 ******************************************************************************/
 
 //    YEAR  NAME   PARENT CMP MACHINE INPUT  STATE        INIT        COMPANY, FULLNAME, FLAGS
-CONS( 1981, ccmk5, 0,      0, mark5,  mark5, mark5_state, empty_init, "SciSys / Philidor Software", "Chess Champion: Mark V", MACHINE_SUPPORTS_SAVE | MACHINE_NOT_WORKING )
-CONS( 1982, ccmk6, ccmk5,  0, mark6,  mark6, mark5_state, empty_init, "SciSys / Philidor Software", "Chess Champion: Mark VI/Philidor", MACHINE_SUPPORTS_SAVE | MACHINE_NOT_WORKING )
+CONS( 1981, ccmk5, 0,      0, mark5,  mark5, mark5_state, empty_init, "SciSys / Philidor Software", "Chess Champion: Mark V", MACHINE_SUPPORTS_SAVE | MACHINE_CLICKABLE_ARTWORK )
+CONS( 1982, ccmk6, ccmk5,  0, mark6,  mark6, mark5_state, empty_init, "SciSys / Philidor Software", "Chess Champion: Mark VI/Philidor", MACHINE_SUPPORTS_SAVE | MACHINE_CLICKABLE_ARTWORK )

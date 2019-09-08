@@ -2462,6 +2462,9 @@ ficpio2                         // 1995 FIC 486-PIO-2
 ficvipio                        // FIC 486-VIP-IO
 ficvipio2                       // FIC 486-VIP-IO2
 ftsserv                         // 1991 Apricot FTs (Scorpion)
+pccm321							// PC-Chips M321 motherboard (386)
+pccm326							// PC-Chips M326 motherboard (386)
+pccm919							// PC-Chips M919 motherboard (486)
 hot409                          // Shuttle HOT-409
 ht286                           //
 ibm5162                         // 1986 IBM XT 5162 (XT w/80286)
@@ -15319,6 +15322,7 @@ gnw_dkong2                      // Nintendo
 gnw_egg                         // Nintendo
 gnw_fire                        // Nintendo
 gnw_fireatk                     // Nintendo
+gnw_fires                       // Nintendo
 gnw_flagman                     // Nintendo
 gnw_gcliff                      // Nintendo
 gnw_ghouse                      // Nintendo
@@ -37518,6 +37522,7 @@ kurikint                        // B42 (c) 1988 Taito Corporation Japan (World)
 kurikinta                       // B42 (c) 1988 Taito Corporation Japan (World)
 kurikintj                       // B42 (c) 1988 Taito Corporation (Japan)
 kurikintu                       // B42 (c) 1988 Taito America Corporation (US)
+kurikintw                       // B42 (c) 1988 Taito Corporation (US, World Games, Inc. license)
 lagirl                          // plgirls bootleg?
 palamed                         // C63 (c) 1990 Hot-B Co., Ltd. (US)
 palamedj                        // C63 (c) 1990 Taito Corporation (Japan)
@@ -37610,7 +37615,8 @@ nightrai                        // 2001.05 Night Raid (V2.03J)
 otenamhf                        // 2005.04 Otenami Haiken Final (V2.07JC)
 otenamih                        // 1999.02 Otenami Haiken (Success)
 otenki                          // 2001.10 Otenki Kororin
-psyvaria                        // 2000.03 Psyvariar -Medium Unit- (V2.04J)
+psyvaria                        // 2000.03 Psyvariar -Medium Unit- (V2.02O)
+psyvarij                        // 2000.03 Psyvariar -Medium Unit- (V2.04J)
 psyvarrv                        // 2000.09 Psyvariar -Revision- (V2.04J)
 raycris                         // 1998.12 Ray Crisis (V2.03J)
 rcdego                          // 1999.06 RC De Go (V2.03J)
