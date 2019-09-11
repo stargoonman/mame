@@ -21,6 +21,7 @@ TODO:
 - confirm gnw_mmouse/gnw_egg rom (dumped from Soviet clone, but pretty
   confident that it's same)
 - confirm gnw_climbcs rom (assumed to be the same as gnw_climber)
+- dump/add CN-07 version of gnw_helmet
 - Currently there is no accurate way to dump the SM511/SM512 melody ROM
   electronically. For the ones that weren't decapped, they were read by
   playing back all melody data and reconstructing it to ROM. Visual(decap)
@@ -1550,6 +1551,8 @@ ROM_END
 
   In the UK, it was distributed as Headache by CGL.
 
+  MCU label CN-07 is the first version, CN-17 is a bugfix release.
+
 ***************************************************************************/
 
 class gnw_helmet_state : public hh_sm510_state
@@ -1619,7 +1622,7 @@ void gnw_helmet_state::gnw_helmet(machine_config &config)
 
 ROM_START( gnw_helmet )
 	ROM_REGION( 0x1000, "maincpu", 0 )
-	ROM_LOAD( "cn-07", 0x0000, 0x0740, CRC(6d251e2e) SHA1(c61f591514de36fb2270038a6505945564c9f90e) )
+	ROM_LOAD( "cn-17", 0x0000, 0x0740, CRC(6d251e2e) SHA1(c61f591514de36fb2270038a6505945564c9f90e) )
 
 	ROM_REGION( 109241, "screen", 0)
 	ROM_LOAD( "gnw_helmet.svg", 0, 109241, CRC(fa8294a3) SHA1(05b734ac0126d3bffe160a23753a0a7e6f82996e) )
@@ -4071,7 +4074,7 @@ ROM_START( gnw_mbaway )
 	ROM_LOAD( "tb-94.program", 0x0000, 0x1000, CRC(11d18a48) SHA1(afccfa19dace7c4fcc15a84ecfcfb9d7ae3861e4) )
 
 	ROM_REGION( 0x100, "maincpu:melody", 0 )
-	ROM_LOAD( "tb-94.melody", 0x000, 0x100, BAD_DUMP CRC(883931c2) SHA1(9ad22bde42a67c42d117f3ffa81a23c3c9044e66) ) // decap needed for verification
+	ROM_LOAD( "tb-94.melody", 0x000, 0x100, BAD_DUMP CRC(60d98353) SHA1(8789d7cd39111fe01848a89748ab91731de5caef) ) // decap needed for verification
 
 	ROM_REGION( 514643, "screen", 0)
 	ROM_LOAD( "gnw_mbaway.svg", 0, 514643, CRC(2ec2f18b) SHA1(8e2fd20615d867aac97e443fb977513ff98138b4) )
@@ -4616,7 +4619,7 @@ ROM_START( gnw_climber )
 	ROM_LOAD( "dr-106.program", 0x0000, 0x1000, CRC(2adcbd6d) SHA1(110dc08c65120ab2c76ee647e89aa2726e24ac1a) )
 
 	ROM_REGION( 0x100, "maincpu:melody", 0 )
-	ROM_LOAD( "dr-106.melody", 0x000, 0x100, BAD_DUMP CRC(c99d7998) SHA1(4f8cf35b13f8b7654e7186bfd67d197d9053e949) ) // decap needed for verification
+	ROM_LOAD( "dr-106.melody", 0x000, 0x100, BAD_DUMP CRC(7c49a3a3) SHA1(fad00d650b4864135c7d50f6fae735b7fffe720f) ) // decap needed for verification
 
 	ROM_REGION( 542332, "screen", 0)
 	ROM_LOAD( "gnw_climber.svg", 0, 542332, CRC(d7e84c21) SHA1(a5b5b68c8cdb3a09966bfb91b281791bef311248) )
@@ -4627,7 +4630,7 @@ ROM_START( gnw_climbcs )
 	ROM_LOAD( "dr-106.program", 0x0000, 0x1000, BAD_DUMP CRC(2adcbd6d) SHA1(110dc08c65120ab2c76ee647e89aa2726e24ac1a) ) // dumped from NWS version
 
 	ROM_REGION( 0x100, "maincpu:melody", 0 )
-	ROM_LOAD( "dr-106.melody", 0x000, 0x100, BAD_DUMP CRC(c99d7998) SHA1(4f8cf35b13f8b7654e7186bfd67d197d9053e949) ) // dumped from NWS version
+	ROM_LOAD( "dr-106.melody", 0x000, 0x100, BAD_DUMP CRC(7c49a3a3) SHA1(fad00d650b4864135c7d50f6fae735b7fffe720f) ) // dumped from NWS version
 
 	ROM_REGION( 564704, "screen", 0)
 	ROM_LOAD( "gnw_climbcs.svg", 0, 564704, CRC(60b25cc5) SHA1(1c101539a861257c5b0334ffdf9491c877759fa1) )
@@ -4718,7 +4721,7 @@ ROM_START( gnw_bfight )
 	ROM_LOAD( "bf-107.program", 0x0000, 0x1000, CRC(4c8d07ed) SHA1(a8974dff85d5f3bacaadb71b86e9b30994b6d129) )
 
 	ROM_REGION( 0x100, "maincpu:melody", 0 )
-	ROM_LOAD( "bf-107.melody", 0x000, 0x100, BAD_DUMP CRC(aadc22a1) SHA1(f6e5572232eb9e83f6833073e1e1e99776245c50) ) // decap needed for verification
+	ROM_LOAD( "bf-107.melody", 0x000, 0x100, BAD_DUMP CRC(ffddf9ed) SHA1(e9cb3a340924363eeef5ab453c452b9cc69207b9) ) // decap needed for verification
 
 	ROM_REGION( 558341, "screen", 0)
 	ROM_LOAD( "gnw_bfight.svg", 0, 558341, CRC(f0d61fe8) SHA1(b0b56224a967e4b26836c0f7e3015d13b42ae5cc) )
