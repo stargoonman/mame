@@ -2453,6 +2453,7 @@ pcd4x                           // Siemens-Nixdorf PCD-4H and other 486 desktops
 pcd4nl                          // 1995 Siemens-Nixdorf PCD-4NL 486 subnotebook
 pcd4nd                          // 1993 Siemens-Nixdorf 486 notebook
 ct386sx                         //
+wy220001						// WYSEpc
 cxsxd                           //
 ec1842                          //
 ec1849                          //
@@ -2464,9 +2465,24 @@ ficvipio                        // FIC 486-VIP-IO
 ficvipio2                       // FIC 486-VIP-IO2
 ftsserv                         // 1991 Apricot FTs (Scorpion)
 aubam12s2						// AUVA COMPUTER, INC. BAM/12-S2 motherboard (286)
+bi025c							// BI-025C HT 12 286 motherboard (286)
+kma202f							// KMA-202F-12R motherboard (286)
+cdtekg2							// CDTEK motherboard with Headland G2 chipset (286)
+octekg2							// Octek motherboard with Headland G2 chipset (286)
+olim203							// Olivetti 286 motherboard
+headg2							// 286 motherboards with Headland G2 chipset
+mb1212c							// Biostar MB-1212C motherboard (286)
+bam16a0							// VIP-M21502A BAM16-A0 motherboard (286)
+cmpa286							// CMP enterprise CO.LTD. motherboard (286)
 suntac5							// 286 motherboards using the 5-chip SUNTAC chipset
 ht12a                           // 286 motherboards using the Headland HT12/A chipset
 vlsi5							// 286 motherboards using the 5-chip VLSI chipset
+sy012							// SY-012 16/25 386MB VER: 5.2 motherboard (386)
+frxc402							// 386 motherboards using FOREX FRX46C402/FRX36C300/SIS85C206 chips
+gs611606a						// Goldstar P/N 611-606A Rev 1.0A motherboard (386)
+pem2530							// DTK PEM 2530 motherboard (386)
+tam3340ma0						// TAM/33/40-MA0 (CM318R00,M31-R00)
+alim1429						// Motherboards using the ALi M1429 A1 and M1431 A2 chipset (386)
 u3911v3							// Uniron U3911-V3 motherboard (286)
 mkp286							// Morse KP-286 motherboard (286)
 mba009							// HLB-286 MBA-009 motherboard (286)
@@ -2478,6 +2494,7 @@ snomi286						// Snobol Mini 286 motherboard (286)
 sy019hi							// Soyo SY-019H and SY-019I motherboards (386)
 sm38640f						// SM 386-40F motherboard (386)
 4nd04a							// 386-4N-D04A motherboard (386)
+hot304							// Shuttle HOT-304
 hot409                          // Shuttle HOT-409
 ibm5162                         // 1986 IBM XT 5162 (XT w/80286)
 ibm5170                         // 1984 IBM PC/AT 5170, original 6 MHz model
@@ -12833,6 +12850,7 @@ targc                           // (c) 1980
 teetert                         // (c) 1981
 venture                         // (c) 1981
 venture2                        // (c) 1981
+venture2b                       // bootleg
 venture4                        // (c) 1981
 
 @source:exidy440.cpp
@@ -15341,6 +15359,7 @@ gnw_flagman                     // Nintendo
 gnw_gcliff                      // Nintendo
 gnw_ghouse                      // Nintendo
 gnw_helmet                      // Nintendo
+gnw_judge                       // Nintendo
 gnw_lboat                       // Nintendo
 gnw_manhole                     // Nintendo
 gnw_mario                       // Nintendo
@@ -21480,6 +21499,15 @@ meijinsn                        // (c) 1986 SNK
 
 @source:mekd2.cpp
 mekd2                           // 1977 Motorola Evaluation Kit
+
+@source:mekd3.cpp
+mekd3                           // 1978 Motorola Evaluation Kit
+
+@source:mekd4.cpp
+mekd4                           // 1980 Motorola Evaluation Kit
+
+@source:mekd5.cpp
+mekd5                           // 1980 Motorola Evaluation Kit
 
 @source:menghong.cpp
 crzyddz2                        // 2006 Sealy
@@ -31643,6 +31671,10 @@ sicpc1605                       // Siemens Sicomp PC16-05
 ssam88s                         //
 sx16                            // Sanyo SX-16
 zdsupers                        //
+ledgmodm						// Leading Edge Model M
+eaglepc2						// Eagle PC-2
+mpx16							// Ciarcia's Circuit Cellar Micromint MPX-16
+hstrtpls						// Vendex HeadStart Plus
 
 @source:pc100.cpp
 pc100                           //
@@ -35334,6 +35366,7 @@ rdftam                          // (c) 1996 Seibu Kaihatsu (Metrotainment licens
 rdftau                          // (c) 1996 Seibu Kaihatsu
 rdftauge                        // (c) 1996 Seibu Kaihatsu (Tuning license and text display, but Australia region code)
 rdftgb                          // (c) 1996 Seibu Kaihatsu
+rdftgr                          // (c) 1996 Seibu Kaihatsu
 rdftit                          // (c) 1996 Seibu Kaihatsu
 rdftj                           // (c) 1996 Seibu Kaihatsu
 rdftja                          // (c) 1996 Seibu Kaihatsu

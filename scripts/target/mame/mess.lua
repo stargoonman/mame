@@ -2701,6 +2701,9 @@ files {
 	MAME_DIR .. "src/mame/drivers/m6805evs.cpp",
 	MAME_DIR .. "src/mame/drivers/m68705prg.cpp",
 	MAME_DIR .. "src/mame/drivers/mekd2.cpp",
+	MAME_DIR .. "src/mame/drivers/mekd3.cpp",
+	MAME_DIR .. "src/mame/drivers/mekd4.cpp",
+	MAME_DIR .. "src/mame/drivers/mekd5.cpp",
 	MAME_DIR .. "src/mame/drivers/mvme147.cpp",
 	MAME_DIR .. "src/mame/drivers/mvme162.cpp",
 }
@@ -3213,6 +3216,8 @@ files {
 	MAME_DIR .. "src/mame/video/sgi_ge5.h",
 	MAME_DIR .. "src/mame/video/sgi_re2.cpp",
 	MAME_DIR .. "src/mame/video/sgi_re2.h",
+	MAME_DIR .. "src/mame/video/sgi_xmap2.cpp",
+	MAME_DIR .. "src/mame/video/sgi_xmap2.h",
 }
 
 createMESSProjects(_target, _subtarget, "sharp")
