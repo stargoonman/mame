@@ -21,6 +21,8 @@
 #include "sound/ym2413.h"
 #include "machine/74259.h"
 #include "machine/gen_latch.h"
+#include "video/snk68_spr.h"
+#include "video/alpha68k_palette.h"
 #include "emupal.h"
 #include "screen.h"
 #include "tilemap.h"
@@ -36,37 +38,14 @@ public:
 		m_audiocpu(*this, "audiocpu"),
 		m_gfxdecode(*this, "gfxdecode"),
 		m_screen(*this, "screen"),
-		m_palette(*this, "palette"),
 		m_outlatch(*this, "outlatch"),
 		m_soundlatch(*this, "soundlatch"),
 		m_shared_ram(*this, "shared_ram"),
 		m_spriteram(*this, "spriteram"),
 		m_videoram(*this, "videoram"),
-		m_color_proms(*this, "color_proms"),
 		m_in(*this, "IN%u", 0U),
 		m_audiobank(*this, "audiobank")
 	{ }
-
-	void alpha68k_II(machine_config &config);
-	void btlfieldb(machine_config &config);
-	void alpha68k_II_gm(machine_config &config);
-	void alpha68k_III(machine_config &config);
-	void alpha68k_V(machine_config &config);
-	void alpha68k_V_sb(machine_config &config);
-
-	void init_btlfield();
-	void init_goldmedl();
-	void init_skyadvnt();
-	void init_goldmedla();
-	void init_gangwarsu();
-	void init_gangwars();
-	void init_timesold1();
-	void init_sbasebal();
-	void init_sbasebalj();
-	void init_skysoldr();
-	void init_skyadvntu();
-	void init_btlfieldb();
-	void init_timesold();
 
 protected:
 	/* devices */
@@ -74,7 +53,6 @@ protected:
 	required_device<cpu_device> m_audiocpu;
 	required_device<gfxdecode_device> m_gfxdecode;
 	required_device<screen_device> m_screen;
-	required_device<palette_device> m_palette;
 	optional_device<ls259_device> m_outlatch;
 	required_device<generic_latch_8_device> m_soundlatch;
 
@@ -83,18 +61,8 @@ protected:
 	required_shared_ptr<u16> m_spriteram;
 	optional_shared_ptr<u16> m_videoram;
 	
-	optional_region_ptr<u8> m_color_proms;
-
 	optional_ioport_array<7> m_in;
 	optional_memory_bank m_audiobank;
-
-	void flipscreen_w(int flip);
-	u16 sound_cpu_r();
-	void sound_bank_w(u8 data);
-
-	DECLARE_MACHINE_START(common);
-	DECLARE_MACHINE_RESET(common);
-	DECLARE_VIDEO_START(alpha68k);
 
 	int           m_flipscreen;
 
@@ -114,54 +82,164 @@ protected:
 
 	void set_screen_raw_params(machine_config &config);
 
-private:
-	u16 control_1_r();
-	u16 control_2_r();
-	u16 control_3_r();
-	u16 control_4_r();
-	void outlatch_w(offs_t offset, u8 data = 0);
-	u16 alpha_II_trigger_r(offs_t offset);
-	u16 alpha_V_trigger_r(offs_t offset);
-	void porta_w(u8 data);
-	void videoram_w(offs_t offset, u16 data);
-	DECLARE_WRITE_LINE_MEMBER(video_control2_w);
-	DECLARE_WRITE_LINE_MEMBER(video_control3_w);
+	DECLARE_MACHINE_START(common);
+	DECLARE_MACHINE_RESET(common);
 
-	TILE_GET_INFO_MEMBER(get_tile_info);
+};
+
+class alpha68k_II_state : public alpha68k_state
+{
+public:
+	alpha68k_II_state(const machine_config &mconfig, device_type type, const char *tag)
+		: alpha68k_state(mconfig, type, tag)
+		, m_sprites(*this, "sprites")
+		, m_palette(*this, "palette")
+	{}
+	
+	void alpha68k_II(machine_config &config);
+	void btlfieldb(machine_config &config);
+	
+	void init_skysoldr();
+	void init_timesold();
+	void init_timesold1();
+	void init_btlfield();
+	void init_btlfieldb();
+protected:
+	uint32_t screen_update(screen_device &screen, bitmap_ind16 &bitmap, const rectangle &cliprect);
+	required_device<snk68_spr_device> m_sprites;
+	required_device<alpha68k_palette_device> m_palette;
+	
+	void base_config(machine_config &config);
+	DECLARE_VIDEO_START(alpha68k);
+	void video_config(machine_config &config, u16 num_pens);
+	void tile_callback(int &tile, int& fx, int& fy, int& region);
+	void tile_callback_noflipx(int &tile, int& fx, int& fy, int& region);
+	void tile_callback_noflipy(int &tile, int& fx, int& fy, int& region);
+
+	INTERRUPT_GEN_MEMBER(sound_nmi);
+	void sound_bank_w(u8 data);
+	void flipscreen_w(int flip);
+	void porta_w(u8 data);
+	u8       m_sound_nmi_mask;
+	u8       m_sound_pa_latch;
+
 	DECLARE_MACHINE_START(alpha68k_II);
 	DECLARE_MACHINE_RESET(alpha68k_II);
-	DECLARE_MACHINE_START(alpha68k_V);
-	DECLARE_MACHINE_RESET(alpha68k_V);
-	u32 screen_update_alpha68k_II(screen_device &screen, bitmap_ind16 &bitmap, const rectangle &cliprect);
-	u32 screen_update_alpha68k_V(screen_device &screen, bitmap_ind16 &bitmap, const rectangle &cliprect);
-	u32 screen_update_alpha68k_V_sb(screen_device &screen, bitmap_ind16 &bitmap, const rectangle &cliprect);
-	INTERRUPT_GEN_MEMBER(sound_nmi);
 	void video_bank_w(u8 data);
-	void draw_sprites(bitmap_ind16 &bitmap, const rectangle &cliprect, int j, int s, int e);
-	void draw_sprites_V(bitmap_ind16 &bitmap, const rectangle &cliprect, int j, int s, int e, u16 fx_mask, u16 fy_mask, u16 sprite_mask);
 	void alpha68k_II_map(address_map &map);
-	void alpha68k_III_map(address_map &map);
-	void alpha68k_V_map(address_map &map);
 	void sound_map(address_map &map);
 	void sound_portmap(address_map &map);
 
-	u8       m_sound_nmi_mask;
-	u8       m_sound_pa_latch;
+	u16 alpha_II_trigger_r(offs_t offset);
 
 	/* video-related */
 	tilemap_t     *m_fix_tilemap;
 	int           m_bank_base;
+
+	void outlatch_w(offs_t offset, u8 data = 0);
+	u16 control_1_r();
+	u16 control_2_r();
+	u16 control_3_r();
+	u16 control_4_r();
+	void videoram_w(offs_t offset, u16 data);
+	DECLARE_WRITE_LINE_MEMBER(video_control2_w);
+	DECLARE_WRITE_LINE_MEMBER(video_control3_w);
+private:
+	TILE_GET_INFO_MEMBER(get_tile_info);
 };
+
+class goldmedal_II_state : public alpha68k_II_state
+{
+public:
+	goldmedal_II_state(const machine_config &mconfig, device_type type, const char *tag)
+		: alpha68k_II_state(mconfig, type, tag)
+	{}
+	
+	void init_goldmedl();
+	void goldmedal(machine_config &config);
+};
+
+class alpha68k_III_state : public alpha68k_II_state
+{
+public:
+	alpha68k_III_state(const machine_config &mconfig, device_type type, const char *tag)
+		: alpha68k_II_state(mconfig, type, tag)
+	{}
+	
+	void alpha68k_III(machine_config &config);
+protected:
+	DECLARE_MACHINE_START(alpha68k_V);
+	DECLARE_MACHINE_RESET(alpha68k_V);
+	void alpha68k_III_map(address_map &map);
+	void alpha68k_V_map(address_map &map);
+	u16 alpha_V_trigger_r(offs_t offset);
+};
+
+class goldmedal_III_state : public alpha68k_III_state
+{
+public:
+	goldmedal_III_state(const machine_config &mconfig, device_type type, const char *tag)
+		: alpha68k_III_state(mconfig, type, tag)
+	{}
+	
+	void init_goldmedla();
+	void goldmedal(machine_config &config);
+};
+
+class alpha68k_V_state : public alpha68k_III_state
+{
+public:
+	alpha68k_V_state(const machine_config &mconfig, device_type type, const char *tag)
+		: alpha68k_III_state(mconfig, type, tag)
+	{}
+
+	void init_skyadvnt();
+	void init_skyadvntu();
+	void init_sbasebal();
+	void init_sbasebalj();
+	void init_gangwarsu();
+	void init_gangwars();
+	void alpha68k_V(machine_config &config);
+};
+
+class skyadventure_state : public alpha68k_V_state
+{
+public:
+	skyadventure_state(const machine_config &mconfig, device_type type, const char *tag)
+		: alpha68k_V_state(mconfig, type, tag)
+	{}
+
+	void skyadventure(machine_config &config);
+};
+
+class gangwars_state : public alpha68k_V_state
+{
+public:
+	gangwars_state(const machine_config &mconfig, device_type type, const char *tag)
+		: alpha68k_V_state(mconfig, type, tag)
+	{}
+
+	void gangwars(machine_config &config);
+};
+
+/*
+ * Base class for HWs with 4bpp PROMs for colors
+ */
 
 class alpha68k_prom_state : public alpha68k_state
 {
 public:
 	alpha68k_prom_state(const machine_config &mconfig, device_type type, const char *tag)
-		: alpha68k_state(mconfig, type, tag)
+		: alpha68k_state(mconfig, type, tag),
+		m_palette(*this, "palette"),
+		m_color_proms(*this, "color_proms")
 	{}
 	
 protected:	
 	void palette_init(palette_device &palette) const;
+
+	required_device<palette_device> m_palette;
+	optional_region_ptr<u8> m_color_proms;
 };
 
 /*
@@ -178,7 +256,7 @@ public:
 
 protected:
 	void main_map(address_map &map);
-	
+
 	void base_config(machine_config &config);
 	void video_config(machine_config &config, u8 tile_transchar, u8 tile_bankshift, bool is_super_stingray);
 	
@@ -195,18 +273,35 @@ private:
 	bool m_is_super_stingray;
 };
 
-class superstingray_state : public alpha68k_N_state
+class sstingray_state : public alpha68k_N_state
 {
 public:
-	superstingray_state(const machine_config &mconfig, device_type type, const char *tag)
+	sstingray_state(const machine_config &mconfig, device_type type, const char *tag)
 		: alpha68k_N_state(mconfig, type, tag)
+		, m_alpha8511(*this, "alpha8511")
 	{}
 
 	void init_sstingry();
 	void sstingry(machine_config &config);
 
 private:
+	u8 alpha8511_command_r(offs_t offset);
+	void alpha8511_command_w(offs_t offset, u8 data);
+	TIMER_CALLBACK_MEMBER(alpha8511_sync);
+	u8 alpha8511_bus_r();
+	void alpha8511_bus_w(u8 data);
+	u8 alpha8511_address_r();
+	u8 alpha8511_rw_r();
+	void alpha8511_control_w(u8 data);
+
+	void main_map(address_map &map);
 	void sound_map(address_map &map);
+
+	required_device<mcs48_cpu_device> m_alpha8511;
+	u8 m_alpha8511_address;
+	u8 m_alpha8511_control;
+	bool m_alpha8511_read_mode;
+	emu_timer *m_alpha8511_sync_timer;
 };
 
 class kyros_state : public alpha68k_N_state
@@ -292,6 +387,7 @@ private:
 	void tnextspc_coin_counters_w(offs_t offset, u16 data);
 	void tnextspc_unknown_w(offs_t offset, u16 data);
 	void tnextspc_soundlatch_w(u8 data);
+	u16 sound_cpu_r();
 };
 
 /* game_id - used to deal with a few game specific situations */
@@ -326,17 +422,5 @@ enum
 	PORT_START("IN2")  /* Coin input to microcontroller */\
 	PORT_BIT( 0x01, IP_ACTIVE_LOW, IPT_COIN1 )\
 	PORT_BIT( 0x02, IP_ACTIVE_LOW, IPT_COIN2 )
-
-// shared between skyadvnt and alpha68k_n.cpp
-#define ALPHA68K_COINAGE_BITS_1TO3 \
-	PORT_DIPNAME( 0x0e, 0x0e, DEF_STR( Coinage ) )  PORT_DIPLOCATION("SW1:4,5,6") \
-	PORT_DIPSETTING(    0x0e, "A 1C/1C B 1C/1C" )   \
-	PORT_DIPSETTING(    0x06, "A 1C/2C B 2C/1C" )   \
-	PORT_DIPSETTING(    0x0a, "A 1C/3C B 3C/1C" )   \
-	PORT_DIPSETTING(    0x02, "A 1C/4C B 4C/1C" )   \
-	PORT_DIPSETTING(    0x0c, "A 1C/5C B 5C/1C" )   \
-	PORT_DIPSETTING(    0x04, "A 1C/6C B 6C/1C" )   \
-	PORT_DIPSETTING(    0x08, "A 2C/3C B 7C/1C" )   \
-	PORT_DIPSETTING(    0x00, "A 3C/2C B 8C/1C" )
 
 #endif // MAME_INCLUDES_ALPHA68K_H
